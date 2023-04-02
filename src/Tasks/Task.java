@@ -1,8 +1,10 @@
+package Tasks;
+
 public class Task {
-    protected int taskId;
-    protected String taskName;
-    protected String taskDescription;
-    protected String taskStatus;
+    private int taskId;
+    private String taskName;
+    private String taskDescription;
+    private String taskStatus;
 
     public Task(String taskName, String taskDescription, String taskStatus) {
         this.taskName = taskName;
@@ -38,7 +40,7 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" +
+        return "Tasks.Task{" +
                 "ID='" + taskId + '\'' +
                 ", name='" + taskName + '\'' +
                 ", description='" + taskDescription + '\'' +

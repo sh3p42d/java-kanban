@@ -1,7 +1,9 @@
+package Tasks;
+
 import java.util.ArrayList;
 
 public class EpicTask extends Task {
-    protected ArrayList<Integer> subIds = new ArrayList<Integer>(); // ID всех подзадач из эпика
+    private ArrayList<Integer> subIds = new ArrayList<Integer>(); // ID всех подзадач из эпика
 
     public EpicTask(String taskName, String taskDescription) {
         // Пустой эпик может быть только в статусе NEW, а при добавлении подзадач, статус будет обновляться

@@ -1,3 +1,8 @@
+import Manager.Manager;
+import Tasks.EpicTask;
+import Tasks.SubTask;
+import Tasks.Task;
+
 import java.util.Scanner;
 
 public class Main {
@@ -25,9 +30,9 @@ public class Main {
                 System.out.println("Создана задача с ID = " + manager.createTask(task2));
                 System.out.println("Создана задача с ID = " + manager.createEpicTask(epicTask1));
                 System.out.println("Создана задача с ID = " + manager.createEpicTask(epicTask2));
-                subTask1.setEpicId(epicTask2.taskId);
-                subTask2.setEpicId(epicTask2.taskId);
-                subTask3.setEpicId(epicTask2.taskId);
+                subTask1.setEpicId(epicTask2.getTaskId());
+                subTask2.setEpicId(epicTask2.getTaskId());
+                subTask3.setEpicId(epicTask2.getTaskId());
                 System.out.println("Создана задача с ID = " + manager.createSubTask(subTask1));
                 System.out.println("Создана задача с ID = " + manager.createSubTask(subTask2));
                 System.out.println("Создана задача с ID = " + manager.createSubTask(subTask3));
@@ -36,9 +41,15 @@ public class Main {
                 System.out.println(manager.getEpicTasks());
                 System.out.println(manager.getSubTasks());
             } else if (command == 3) { // Выводим задачу по ID
-                System.out.println("Введите ID:");
+                System.out.println("Введите ID задачи:");
                 int id = scanner.nextInt();
                 System.out.println(manager.getOneTask(id));
+                System.out.println("Введите ID эпика:");
+                id = scanner.nextInt();
+                System.out.println(manager.getOneEpicTask(id));
+                System.out.println("Введите ID подзадачи:");
+                id = scanner.nextInt();
+                System.out.println(manager.getOneSubTask(id));
             } else if (command == 4) { // Выводим подзадачи эпика
                 System.out.println("Введите ID эпика:");
                 int id = scanner.nextInt();
@@ -52,16 +63,24 @@ public class Main {
                 manager.updateEpicTask(epicTask1);
 
                 subTask2.setTaskStatus("DONE");
-                subTask2.setEpicId(epicTask1.taskId);
+                subTask2.setEpicId(epicTask1.getTaskId());
                 manager.updateSubTask(subTask2);
             } else if (command == 6) { // Удаляем все задачи
                 manager.deleteTasks();
                 manager.deleteEpicTasks();
-                // manager.deleteSubTasks();
+                manager.deleteSubTasks();
             } else if (command == 7) { // Удаляем задачи по ID
-                System.out.println("Введите ID:");
+                System.out.println("Введите ID задачи:");
                 int id = scanner.nextInt();
-                System.out.println("Задачи с ID = " + manager.deleteById(id) + " больше нет.");
+                System.out.println("Задачи с ID = " + manager.deleteTaskById(id) + " больше нет.");
+
+                System.out.println("Введите ID эпика:");
+                id = scanner.nextInt();
+                System.out.println("Задачи с ID = " + manager.deleteEpicById(id) + " больше нет.");
+
+                System.out.println("Введите ID подзадачи:");
+                id = scanner.nextInt();
+                System.out.println("Задачи с ID = " + manager.deleteSubById(id) + " больше нет.");
             } else if (command == 0) {
                 System.out.println("Выход");
                 break;

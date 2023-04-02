@@ -1,5 +1,7 @@
+package Tasks;
+
 public class SubTask extends Task {
-    protected int epicId; // ID эпика, к которому относится подзадача
+    private int epicId; // ID эпика, к которому относится подзадача
 
     public SubTask(String taskName, String taskDescription, String taskStatus, int epicId) {
         super(taskName, taskDescription, taskStatus);
