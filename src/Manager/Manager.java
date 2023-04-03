@@ -57,37 +57,17 @@ public class Manager {
 
     // Получение задачи каждого типа по ID
     public Task getOneTask(Integer id) {
-        if (taskMap.containsKey(id)) {
-            return taskMap.get(id);
-        } else {
-            // Заглушка на случай попытки вернуть задачу, когда их вообще нет
-            System.out.println(" ");
-            return null;
-        }
+        return taskMap.get(id);
     }
 
-    public Task getOneEpicTask(Integer id) {
-        if (epicMap.containsKey(id)) {
-            return epicMap.get(id);
-        } else {
-            // Заглушка на случай попытки вернуть задачу, когда их вообще нет
-            System.out.println(" ");
-            return null;
-        }
+    // Тут виной моя невнимательность
+    public EpicTask getOneEpicTask(Integer id) {
+        return epicMap.get(id);
     }
 
-    public Task getOneSubTask(Integer id) {
-        if (taskMap.containsKey(id)) {
-            return taskMap.get(id);
-        } else if (epicMap.containsKey(id)) {
-            return epicMap.get(id);
-        } else if (subMap.containsKey(id)){
-            return subMap.get(id);
-        } else {
-            // Заглушка на случай попытки вернуть задачу, когда их вообще нет
-            System.out.println(" ");
-            return null;
-        }
+    // И тут тоже невнимательность
+    public SubTask getOneSubTask(Integer id) {
+        return subMap.get(id);
     }
 
     // Создание каждого типа задач
@@ -144,9 +124,9 @@ public class Manager {
         int doneStatus = 0;
 
         for (String status : statuses) {
-            if (status == "NEW") {
+            if (status.equals("NEW")) {
                 newStatus++;
-            } else if (status == "DONE") {
+            } else if (status.equals("DONE")) {
                 doneStatus++;
             } else {
                 newStatus = 0;
@@ -162,7 +142,6 @@ public class Manager {
         } else {
             epicTask.setTaskStatus("IN_PROGRESS");
         }
-        epicMap.put(epicTask.getTaskId(), epicTask);
     }
 
     public void updateSubTask(SubTask subTask) {
@@ -179,50 +158,35 @@ public class Manager {
 
     // Удаление задачи по ID
     public Integer deleteTaskById(Integer id) {
-        if (taskMap.containsKey(id)) {
-            taskMap.remove(id);
-        } else {
-            // Заглушка на случай попытки удалить задачу, когда их вообще нет
-            System.out.println(" ");
-        }
+        taskMap.remove(id);
         return id;
     }
 
     public Integer deleteEpicById(Integer id) {
-        if (epicMap.containsKey(id)) {
-            // Удаляем подзадачи, если они есть
-            EpicTask epic = epicMap.get(id);
-            ArrayList<Integer> subIds = new ArrayList<Integer>(epic.getSubIds());
-            for (Integer subId : subIds) {
-                deleteSubById(subId);
-            }
-            // Удаляем эпик из списка
-            epicMap.remove(id);
-        } else {
-            // Заглушка на случай попытки удалить задачу, когда их вообще нет
-            System.out.println(" ");
+        // Удаляем подзадачи, если они есть
+        EpicTask epic = epicMap.get(id);
+        ArrayList<Integer> subIds = new ArrayList<Integer>(epic.getSubIds());
+        for (Integer subId : subIds) {
+            subMap.remove(subId);
         }
+        // Удаляем эпик из списка
+        epicMap.remove(id);
         return id;
     }
 
     public Integer deleteSubById(Integer id) {
-        if (subMap.containsKey(id)){
-            // Удаляем подзадачу из эпика
-            int currentEpicId = subMap.get(id).getEpicId();
-            EpicTask epic = epicMap.get(currentEpicId);
-            ArrayList<Integer> epicSubIds = epic.getSubIds();
-            if (epicSubIds.contains(id)) {
-                epicSubIds.remove(id);
-                epic.setSubIds(epicSubIds);
-                // и обновляем эпик
-                updateEpicStatus(epic);
-            }
-            // Удаляем подзадачу из списка
-            subMap.remove(id);
-        } else {
-            // Заглушка на случай попытки удалить задачу, когда их вообще нет
-            System.out.println(" ");
+        // Удаляем подзадачу из эпика
+        int currentEpicId = subMap.get(id).getEpicId();
+        EpicTask epic = epicMap.get(currentEpicId);
+        ArrayList<Integer> epicSubIds = epic.getSubIds();
+        if (epicSubIds.contains(id)) {
+            epicSubIds.remove(id);
+            epic.setSubIds(epicSubIds);
+            // и обновляем эпик
+            updateEpicStatus(epic);
         }
+        // Удаляем подзадачу из списка
+        subMap.remove(id);
         return id;
     }
 
