@@ -1,5 +1,8 @@
-import Manager.Manager;
+import Manager.InMemoryHistoryManager;
+import Manager.InMemoryTaskManager;
+import Manager.Managers;
 import Tasks.EpicTask;
+import Tasks.StatusOfTask;
 import Tasks.SubTask;
 import Tasks.Task;
 
@@ -10,16 +13,17 @@ public class Main {
     // Для проверок
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        Manager manager = new Manager();
+        InMemoryTaskManager manager = (InMemoryTaskManager) Managers.getDefault();
+        InMemoryHistoryManager managerHistory = manager.managerHistory;
 
-        Task task1 = new Task("First Simple", "First description", "NEW");
-        Task task2 = new Task("Second Simple", "Second description", "DONE");
+        Task task1 = new Task("First Simple", "First description", StatusOfTask.NEW);
+        Task task2 = new Task("Second Simple", "Second description", StatusOfTask.DONE);
         EpicTask epicTask1 = new EpicTask("First Epic", "1st Epic");
         EpicTask epicTask2 = new EpicTask("Second Epic", "2nd Epic");
         // Т.к. создание подзадач вне основного цикла программы, ID эпика захардкодил
-        SubTask subTask1 = new SubTask("First Sub", "1st Sub", "NEW", 4);
-        SubTask subTask2 = new SubTask("Second Sub", "2nd Sub", "IN_PROGRESS", 4);
-        SubTask subTask3 = new SubTask("Third Sub", "3rd Sub", "DONE", 4);
+        SubTask subTask1 = new SubTask("First Sub", "1st Sub", StatusOfTask.NEW, 4);
+        SubTask subTask2 = new SubTask("Second Sub", "2nd Sub", StatusOfTask.IN_PROGRESS, 4);
+        SubTask subTask3 = new SubTask("Third Sub", "3rd Sub", StatusOfTask.DONE, 4);
 
         while (true) {
             printMenu();
@@ -43,13 +47,13 @@ public class Main {
             } else if (command == 3) { // Выводим задачу по ID
                 System.out.println("Введите ID задачи:");
                 int id = scanner.nextInt();
-                System.out.println(manager.getOneTask(id));
+                System.out.println(manager.getTask(id));
                 System.out.println("Введите ID эпика:");
                 id = scanner.nextInt();
-                System.out.println(manager.getOneEpicTask(id));
+                System.out.println(manager.getEpic(id));
                 System.out.println("Введите ID подзадачи:");
                 id = scanner.nextInt();
-                System.out.println(manager.getOneSubTask(id));
+                System.out.println(manager.getSub(id));
             } else if (command == 4) { // Выводим подзадачи эпика
                 System.out.println("Введите ID эпика:");
                 int id = scanner.nextInt();
@@ -62,7 +66,7 @@ public class Main {
                 epicTask1.setTaskName("Epic First");
                 manager.updateEpicTask(epicTask1);
 
-                subTask2.setTaskStatus("DONE");
+                subTask2.setTaskStatus(StatusOfTask.DONE);
                 subTask2.setEpicId(epicTask1.getTaskId());
                 manager.updateSubTask(subTask2);
             } else if (command == 6) { // Удаляем все задачи
@@ -81,6 +85,12 @@ public class Main {
                 System.out.println("Введите ID подзадачи:");
                 id = scanner.nextInt();
                 System.out.println("Задачи с ID = " + manager.deleteSubById(id) + " больше нет.");
+            } else if (command == 8) { // Смотрим историю просмотра задач
+                System.out.println("Список просмотренных задач:");
+                System.out.println(managerHistory.getHistory());
+            } else if (command == 9) { // Очищаем историю просмотра
+                System.out.println("Очищаем историю просмотров:");
+                managerHistory = (InMemoryHistoryManager) Managers.getDefaultHistory();
             } else if (command == 0) {
                 System.out.println("Выход");
                 break;
@@ -99,6 +109,8 @@ public class Main {
         System.out.println("5 - Обновить задачи");
         System.out.println("6 - Удалить задачи");
         System.out.println("7 - Удалить задачу по ID");
+        System.out.println("8 - Посмотреть историю");
+        System.out.println("9 - Очистить историю просмотров");
         System.out.println("0 - Выход");
     }
 }
