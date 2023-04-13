@@ -14,7 +14,6 @@ public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         InMemoryTaskManager manager = (InMemoryTaskManager) Managers.getDefault();
-        InMemoryHistoryManager managerHistory = manager.managerHistory;
 
         Task task1 = new Task("First Simple", "First description", StatusOfTask.NEW);
         Task task2 = new Task("Second Simple", "Second description", StatusOfTask.DONE);
@@ -87,10 +86,10 @@ public class Main {
                 System.out.println("Задачи с ID = " + manager.deleteSubById(id) + " больше нет.");
             } else if (command == 8) { // Смотрим историю просмотра задач
                 System.out.println("Список просмотренных задач:");
-                System.out.println(managerHistory.getHistory());
+                System.out.println(manager.getHistory());
             } else if (command == 9) { // Очищаем историю просмотра
-                System.out.println("Очищаем историю просмотров:");
-                managerHistory = (InMemoryHistoryManager) Managers.getDefaultHistory();
+                System.out.println("Очищаем историю просмотров");
+                manager.dropHistory();
             } else if (command == 0) {
                 System.out.println("Выход");
                 break;

@@ -22,4 +22,12 @@ public class EpicTask extends Task {
     public String toString() {
         return "Epic" + super.toString() + "{SubTasksIds='" + subIds + "'}";
     }
+
+    public void addSub(int subId) {
+        subIds.add(subId);
+    }
+
+    public void removeSub(int subId) {
+        subIds.remove(subId);
+    }
 }

@@ -30,9 +30,7 @@ public interface TaskManager {
 
     // Обновление задач каждого типа
     void updateTask(Task task);
-    // Разбил метод для эпиков на два
     void updateEpicTask(EpicTask epicTask);
-    //void updateEpicStatus(EpicTask epicTask);
     void updateSubTask(SubTask subTask);
 
     // Удаление задачи по ID
