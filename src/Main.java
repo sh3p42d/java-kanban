@@ -1,4 +1,3 @@
-import Manager.InMemoryHistoryManager;
 import Manager.InMemoryTaskManager;
 import Manager.Managers;
 import Tasks.EpicTask;
@@ -43,14 +42,22 @@ public class Main {
                 System.out.println(manager.getTasks());
                 System.out.println(manager.getEpicTasks());
                 System.out.println(manager.getSubTasks());
-            } else if (command == 3) { // Выводим задачу по ID
+            } else if (command == 3) { // Выводим задачу по ID (история)
                 System.out.println("Введите ID задачи:");
                 int id = scanner.nextInt();
+                System.out.println(manager.getTask(id));
+                id = scanner.nextInt();
                 System.out.println(manager.getTask(id));
                 System.out.println("Введите ID эпика:");
                 id = scanner.nextInt();
                 System.out.println(manager.getEpic(id));
+                id = scanner.nextInt();
+                System.out.println(manager.getEpic(id));
                 System.out.println("Введите ID подзадачи:");
+                id = scanner.nextInt();
+                System.out.println(manager.getSub(id));
+                id = scanner.nextInt();
+                System.out.println(manager.getSub(id));
                 id = scanner.nextInt();
                 System.out.println(manager.getSub(id));
             } else if (command == 4) { // Выводим подзадачи эпика
@@ -68,10 +75,11 @@ public class Main {
                 subTask2.setTaskStatus(StatusOfTask.DONE);
                 subTask2.setEpicId(epicTask1.getTaskId());
                 manager.updateSubTask(subTask2);
-            } else if (command == 6) { // Удаляем все задачи
+            } else if (command == 6) { // Удаляем все задачи и их историю
                 manager.deleteTasks();
                 manager.deleteEpicTasks();
                 manager.deleteSubTasks();
+                manager.dropHistory();
             } else if (command == 7) { // Удаляем задачи по ID
                 System.out.println("Введите ID задачи:");
                 int id = scanner.nextInt();
@@ -87,9 +95,10 @@ public class Main {
             } else if (command == 8) { // Смотрим историю просмотра задач
                 System.out.println("Список просмотренных задач:");
                 System.out.println(manager.getHistory());
-            } else if (command == 9) { // Очищаем историю просмотра
-                System.out.println("Очищаем историю просмотров");
-                manager.dropHistory();
+            } else if (command == 9) { //
+                System.out.println("Удалить задачу из просмотра по ID:");
+                int id = scanner.nextInt();
+                manager.removeTaskHistory(id);
             } else if (command == 0) {
                 System.out.println("Выход");
                 break;
@@ -106,7 +115,7 @@ public class Main {
         System.out.println("3 - Посмотреть одну задачу по ID");
         System.out.println("4 - Показать подзадачи эпика");
         System.out.println("5 - Обновить задачи");
-        System.out.println("6 - Удалить задачи");
+        System.out.println("6 - Удалить все задачи и историю");
         System.out.println("7 - Удалить задачу по ID");
         System.out.println("8 - Посмотреть историю");
         System.out.println("9 - Очистить историю просмотров");
