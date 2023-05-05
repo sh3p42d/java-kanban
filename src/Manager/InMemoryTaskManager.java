@@ -7,44 +7,60 @@ import Tasks.Task;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class InMemoryTaskManager implements TaskManager {
     private int nextId = 1;
-    private final HashMap<Integer, Task> taskMap = new HashMap<>();
-    private final HashMap<Integer, EpicTask> epicMap = new HashMap<>();
-    private final HashMap<Integer, SubTask> subMap = new HashMap<>();
+    private final Map<Integer, Task> taskMap = new HashMap<>();
+    private final Map<Integer, EpicTask> epicMap = new HashMap<>();
+    private final Map<Integer, SubTask> subMap = new HashMap<>();
     private final HistoryManager managerHistory = Managers.getDefaultHistory();
 
     // Получение списка задач каждого типа
     @Override
-    public ArrayList<Task> getTasks() {
+    public List<Task> getTasks() {
         return new ArrayList<>(taskMap.values());
     }
 
     @Override
-    public ArrayList<EpicTask> getEpicTasks() {
+    public List<EpicTask> getEpicTasks() {
         return new ArrayList<>(epicMap.values());
     }
 
     @Override
-    public ArrayList<SubTask> getSubTasks() {
+    public List<SubTask> getSubTasks() {
         return new ArrayList<>(subMap.values());
     }
 
     // Удаление всех задач каждого типа
     @Override
     public void deleteTasks() {
+        for (Task task : taskMap.values()) {
+            managerHistory.removeOneTaskHistory(task.getTaskId());
+        }
         taskMap.clear();
     }
 
     @Override
     public void deleteEpicTasks() {
+        for (SubTask subTask : subMap.values()) {
+            managerHistory.removeOneTaskHistory(subTask.getTaskId());
+        }
+
+        for (EpicTask epicTask : epicMap.values()) {
+            managerHistory.removeOneTaskHistory(epicTask.getTaskId());
+        }
+
         subMap.clear();
         epicMap.clear();
     }
 
     @Override
     public void deleteSubTasks() {
+        for (SubTask subTask : subMap.values()) {
+            managerHistory.removeOneTaskHistory(subTask.getTaskId());
+        }
+
         subMap.clear();
         for (EpicTask epic : epicMap.values()) {
             epic.setSubIds(new ArrayList<>());
@@ -55,6 +71,7 @@ public class InMemoryTaskManager implements TaskManager {
     // Получение задачи каждого типа по ID с записью в историю просмотров
     @Override
     public Task getTask(Integer id) {
+        // Не совсем понял как вынести получение задачи в одну переменную, если у меня три разных мапы
         managerHistory.add(taskMap.get(id));
         return taskMap.get(id);
     }
@@ -161,25 +178,23 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Integer deleteEpicById(Integer id) {
-        EpicTask epic = epicMap.get(id);
+        EpicTask epic = epicMap.remove(id);
         ArrayList<Integer> subIds = new ArrayList<>(epic.getSubIds());
         for (Integer subId : subIds) {
             removeTaskHistory(subId);
             subMap.remove(subId);
         }
-        epicMap.remove(id);
         removeTaskHistory(id);
         return id;
     }
 
     @Override
     public Integer deleteSubById(Integer id) {
-        int currentEpicId = subMap.get(id).getEpicId();
+        int currentEpicId = subMap.remove(id).getEpicId();
         EpicTask epic = epicMap.get(currentEpicId);
         epic.removeSub(id);
         updateEpicStatus(epic);
         removeTaskHistory(id);
-        subMap.remove(id);
         return id;
     }
 
@@ -201,11 +216,7 @@ public class InMemoryTaskManager implements TaskManager {
         return managerHistory.getHistory();
     }
 
-    public void dropHistory() {
-        managerHistory.dropHistory();
-    }
-
-    public void removeTaskHistory(int id) {
-        managerHistory.remove(id);
+    public void removeTaskHistory(Integer id) {
+        managerHistory.removeOneTaskHistory(id);
     }
 }

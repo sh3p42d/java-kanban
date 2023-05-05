@@ -4,12 +4,13 @@ import Tasks.EpicTask;
 import Tasks.SubTask;
 import Tasks.Task;
 import java.util.ArrayList;
+import java.util.List;
 
 public interface TaskManager {
     // Получение списка задач каждого типа
-    ArrayList<Task> getTasks();
-    ArrayList<EpicTask> getEpicTasks();
-    ArrayList<SubTask> getSubTasks();
+    List<Task> getTasks();
+    List<EpicTask> getEpicTasks();
+    List<SubTask> getSubTasks();
 
     // Удаление всех задач каждого типа
     void deleteTasks();

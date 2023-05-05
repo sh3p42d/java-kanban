@@ -28,6 +28,15 @@ public class EpicTask extends Task {
     }
 
     public void removeSub(int subId) {
-        subIds.remove(subId);
+        if (subIds.contains(subId)) {
+            int i = 0;
+            for (Integer id : subIds) {
+                if (id == subId) {
+                    break;
+                }
+                i++;
+            }
+            subIds.remove(i);
+        }
     }
 }

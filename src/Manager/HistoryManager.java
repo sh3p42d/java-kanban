@@ -1,11 +1,12 @@
 package Manager;
-
 import Tasks.Task;
-import java.util.ArrayList;
+
+import java.util.HashMap;
+import java.util.List;
+
 
 public interface HistoryManager {
     void add(Task task);
-    ArrayList<Task> getHistory();
-    void dropHistory();
-    void remove(int id);
+    void removeOneTaskHistory(Integer id);
+    List<Task> getHistory();
 }

@@ -3,13 +3,13 @@ package Manager;
 import Tasks.Task;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private final ArrayList<Task> tasksHistory = new ArrayList<>();
     private final HashMap<Integer, Node<Task>> tasksMap = new HashMap<>();
 
     // Реализация двусвязного списка через узлы
-    static class Node<E> {
+    private static class Node<E> {
         public E data;
         public Node<E> next;
         public Node<E> prev;
@@ -34,50 +34,34 @@ public class InMemoryHistoryManager implements HistoryManager {
         } else {
             oldTail.prev = newNode;
         }
-        getTasks(task.getTaskId(), newNode);
+        tasksMap.put(task.getTaskId(), newNode);
     }
 
-    private void getTasks(int taskId, Node<Task> node) {
-        if (tasksMap.containsKey(taskId)) {
-            removeNode(taskId);
-        }
-        tasksMap.put(taskId, node);
-
-        tasksHistory.clear();
-        for (Node<Task> taskNode : tasksMap.values()) {
-            tasksHistory.add(taskNode.data);
+    private void removeNode(Integer id) {
+        if (tasksMap.containsKey(id)) {
+            Node<Task> node = tasksMap.remove(id);
+            node.prev = node.next;
         }
     }
 
-    private void removeNode(int id) {
-        tasksMap.remove(id);
-    }
-
-    @Override
-    public void add(Task task) {
-        linkLast(task);
-
-        if (tasksHistory.size() > 10) {
-            tasksHistory.remove(0);
+    public List<Task> getHistory() {
+        List<Task> tasksHistory = new ArrayList<>();
+        for (Node<Task> task : tasksMap.values()) {
+            tasksHistory.add(task.data);
         }
-    }
-
-    @Override
-    public ArrayList<Task> getHistory() {
         return tasksHistory;
     }
 
     @Override
-    public void dropHistory() {
-        tasksMap.clear();
-        tasksHistory.clear();
+    public void add(Task task) {
+        if (task != null) {
+            removeNode(task.getTaskId());
+            linkLast(task);
+        }
     }
 
     @Override
-    public void remove(int id) {
-        // Тут очень хотелось добавить проверку на наличие записи, т.к. если не посмотреть все подзадачи эпика
-        // будет NullPointerException
-        tasksHistory.remove(tasksMap.get(id).data);
+    public void removeOneTaskHistory(Integer id) {
         removeNode(id);
     }
 }
