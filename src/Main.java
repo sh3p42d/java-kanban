@@ -5,13 +5,10 @@ import Tasks.StatusOfTask;
 import Tasks.SubTask;
 import Tasks.Task;
 
-import java.util.Scanner;
-
 public class Main {
 
     // Тестирование работы по ТЗ
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
         InMemoryTaskManager manager = (InMemoryTaskManager) Managers.getDefault();
 
         Task task1 = new Task("First Simple", "First description", StatusOfTask.NEW);
@@ -22,78 +19,61 @@ public class Main {
         SubTask subTask2 = new SubTask("Second Sub", "2nd Sub", StatusOfTask.IN_PROGRESS, 4);
         SubTask subTask3 = new SubTask("Third Sub", "3rd Sub", StatusOfTask.DONE, 4);
 
-        while (true) {
-            printMenu();
-            int command = scanner.nextInt();
+        // Создание задач менеджером
+        System.out.println("Создана задача с ID = " + manager.createTask(task1));
+        System.out.println("Создана задача с ID = " + manager.createTask(task2));
+        System.out.println("Создан эпик с ID = " + manager.createEpicTask(epicTask1));
+        System.out.println("Создан эпик с ID = " + manager.createEpicTask(epicTask2));
+        subTask1.setEpicId(epicTask2.getTaskId());
+        subTask2.setEpicId(epicTask2.getTaskId());
+        subTask3.setEpicId(epicTask2.getTaskId());
+        System.out.println("Создана подзадача с ID = " + manager.createSubTask(subTask1));
+        System.out.println("Создана подзадача с ID = " + manager.createSubTask(subTask2));
+        System.out.println("Создана подзадача с ID = " + manager.createSubTask(subTask3));
 
-            if (command == 1) { // Создание задач менеджером
-                System.out.println("Создана задача с ID = " + manager.createTask(task1));
-                System.out.println("Создана задача с ID = " + manager.createTask(task2));
-                System.out.println("Создан эпик с ID = " + manager.createEpicTask(epicTask1));
-                System.out.println("Создан эпик с ID = " + manager.createEpicTask(epicTask2));
-                subTask1.setEpicId(epicTask2.getTaskId());
-                subTask2.setEpicId(epicTask2.getTaskId());
-                subTask3.setEpicId(epicTask2.getTaskId());
-                System.out.println("Создана подзадача с ID = " + manager.createSubTask(subTask1));
-                System.out.println("Создана подзадача с ID = " + manager.createSubTask(subTask2));
-                System.out.println("Создана подзадача с ID = " + manager.createSubTask(subTask3));
-            } else if (command == 2) { // Выводим задачу по ID с записью в историю
-                System.out.println("Посмотрим на задачи");
-                manager.getTask(1);
-                manager.getTask(2);
-                manager.getTask(1);
-                manager.getTask(1);
-                System.out.println("Текущая история просмотров задач: ");
-                System.out.println(manager.getHistory());
+        // Выводим задачу по ID с записью в историю
+        System.out.println("Посмотрим на задачи");
+        manager.getTask(1);
+        manager.getTask(2);
+        manager.getTask(1);
+        manager.getTask(1);
+        System.out.println("Текущая история просмотров задач: ");
+        System.out.println(manager.getHistory());
 
-                System.out.println("Посмотрим на эпики");
-                manager.getEpic(3);
-                manager.getEpic(3);
-                manager.getEpic(4);
-                manager.getEpic(4);
-                System.out.println("Текущая история просмотров задач и эпиков: ");
-                System.out.println(manager.getHistory());
+        System.out.println("Посмотрим на эпики");
+        manager.getEpic(3);
+        manager.getEpic(3);
+        manager.getEpic(4);
+        manager.getEpic(4);
+        System.out.println("Текущая история просмотров задач и эпиков: ");
+        System.out.println(manager.getHistory());
 
-                System.out.println("Посмотрим на подзадачи");
-                manager.getSub(5);
-                manager.getSub(5);
-                manager.getSub(6);
-                manager.getSub(7);
-                manager.getSub(6);
-                System.out.println("Текущая история просмотров всех задач: ");
-                System.out.println(manager.getHistory());
-            } else if (command == 3) { // Удаление задач
-                System.out.println("Текущая история просмотров всех задач: ");
-                System.out.println(manager.getHistory());
+        System.out.println("Посмотрим на подзадачи");
+        manager.getSub(5);
+        manager.getSub(5);
+        manager.getSub(6);
+        manager.getSub(7);
+        manager.getSub(6);
+        System.out.println("Текущая история просмотров всех задач: ");
+        System.out.println(manager.getHistory());
 
-                System.out.println("Удаляем задачу с id = 1");
-                manager.deleteTaskById(1);
-                System.out.println("Текущая история просмотров всех задач: ");
-                System.out.println(manager.getHistory());
+        // Удаление задач
+        System.out.println("Текущая история просмотров всех задач: ");
+        System.out.println(manager.getHistory());
 
-                System.out.println("Удаляем подзадачу с id = 5");
-                manager.deleteSubById(5);
-                System.out.println("Текущая история просмотров всех задач: ");
-                System.out.println(manager.getHistory());
+        System.out.println("Удаляем задачу с id = 1");
+        manager.deleteTaskById(1);
+        System.out.println("Текущая история просмотров всех задач: ");
+        System.out.println(manager.getHistory());
 
-                System.out.println("Удаляем эпик с id = 4");
-                manager.deleteEpicById(4);
-                System.out.println("Текущая история просмотров всех задач: ");
-                System.out.println(manager.getHistory());
-            } else if (command == 0) {
-                System.out.println("Выход");
-                break;
-            } else {
-                System.out.println("Такой команды нет.");
-            }
-        }
-    }
+        System.out.println("Удаляем подзадачу с id = 5");
+        manager.deleteSubById(5);
+        System.out.println("Текущая история просмотров всех задач: ");
+        System.out.println(manager.getHistory());
 
-    public static void printMenu() {
-        System.out.println("Что вы хотите сделать? ");
-        System.out.println("1 - Создать задачи");
-        System.out.println("2 - Посмотреть задачу по ID");
-        System.out.println("3 - Удаление задач");
-        System.out.println("0 - Выход");
+        System.out.println("Удаляем эпик с id = 4");
+        manager.deleteEpicById(4);
+        System.out.println("Текущая история просмотров всех задач: ");
+        System.out.println(manager.getHistory());
     }
 }

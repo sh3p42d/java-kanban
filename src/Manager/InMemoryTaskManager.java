@@ -71,21 +71,23 @@ public class InMemoryTaskManager implements TaskManager {
     // Получение задачи каждого типа по ID с записью в историю просмотров
     @Override
     public Task getTask(Integer id) {
-        // Не совсем понял как вынести получение задачи в одну переменную, если у меня три разных мапы
-        managerHistory.add(taskMap.get(id));
-        return taskMap.get(id);
+        Task task = taskMap.get(id);
+        managerHistory.add(task);
+        return task;
     }
 
     @Override
     public EpicTask getEpic(Integer id) {
-        managerHistory.add(epicMap.get(id));
-        return epicMap.get(id);
+        EpicTask epic = epicMap.get(id);
+        managerHistory.add(epic);
+        return epic;
     }
 
     @Override
     public SubTask getSub(Integer id) {
-        managerHistory.add(subMap.get(id));
-        return subMap.get(id);
+        SubTask sub = subMap.get(id);
+        managerHistory.add(sub);
+        return sub;
     }
 
     // Создание каждого типа задач
@@ -216,7 +218,7 @@ public class InMemoryTaskManager implements TaskManager {
         return managerHistory.getHistory();
     }
 
-    public void removeTaskHistory(Integer id) {
+    private void removeTaskHistory(Integer id) {
         managerHistory.removeOneTaskHistory(id);
     }
 }
