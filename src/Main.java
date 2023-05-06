@@ -58,9 +58,6 @@ public class Main {
         System.out.println(manager.getHistory());
 
         // Удаление задач
-        System.out.println("Текущая история просмотров всех задач: ");
-        System.out.println(manager.getHistory());
-
         System.out.println("Удаляем задачу с id = 1");
         manager.deleteTaskById(1);
         System.out.println("Текущая история просмотров всех задач: ");
