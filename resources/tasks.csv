@@ -1,0 +1,9 @@
+id,type,name,status,description,epic
+8,TASK,подумать про сортировку,NEW,task id = 8
+9,TASK,what am i doing,DONE,task id = 9
+2,TASK,изменил имя у task2,DONE,task id = 2
+10,EPIC,Третий Epic,NEW,epic id = 10
+3,EPIC,First Epic,DONE,изменил описание у epicTask1
+7,SUBTASK,Third Sub,DONE,sub id = 7,3
+
+2,3,7

@@ -12,8 +12,6 @@ public class Task {
         this.taskStatus = taskStatus;
     }
 
-    // getTaskName и getTaskDescription убрал, т.к. нигде не используются
-
     public int getTaskId() {
         return taskId;
     }
@@ -22,12 +20,12 @@ public class Task {
         return taskStatus;
     }
 
-    public void setTaskName(String taskName) {
-        this.taskName = taskName;
+    public String getTaskName() {
+        return taskName;
     }
 
-    public void setTaskDescription(String taskDescription) {
-        this.taskDescription = taskDescription;
+    public String getTaskDescription() {
+        return taskDescription;
     }
 
     public void setTaskId(int taskId) {
@@ -36,6 +34,14 @@ public class Task {
 
     public void setTaskStatus(StatusOfTask taskStatus) {
         this.taskStatus = taskStatus;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
+    }
+
+    public void setTaskDescription(String taskDescription) {
+        this.taskDescription = taskDescription;
     }
 
     @Override

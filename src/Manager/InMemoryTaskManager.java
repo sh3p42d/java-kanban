@@ -11,10 +11,50 @@ import java.util.Map;
 
 public class InMemoryTaskManager implements TaskManager {
     private int nextId = 1;
-    private final Map<Integer, Task> taskMap = new HashMap<>();
-    private final Map<Integer, EpicTask> epicMap = new HashMap<>();
-    private final Map<Integer, SubTask> subMap = new HashMap<>();
-    private final HistoryManager managerHistory = Managers.getDefaultHistory();
+    private Map<Integer, Task> taskMap = new HashMap<>();
+    private Map<Integer, EpicTask> epicMap = new HashMap<>();
+    private Map<Integer, SubTask> subMap = new HashMap<>();
+    private HistoryManager managerHistory = Managers.getDefaultHistory();
+
+    public int getNextId() {
+        return nextId;
+    }
+
+    public void setNextId(int nextId) {
+        this.nextId = nextId;
+    }
+
+    public Map<Integer, Task> getTaskMap() {
+        return taskMap;
+    }
+
+    public void setTaskMap(Map<Integer, Task> newTaskMap) {
+        taskMap = newTaskMap;
+    }
+
+    public Map<Integer, EpicTask> getEpicMap() {
+        return epicMap;
+    }
+
+    public void setEpicMap(Map<Integer, EpicTask> epicMap) {
+        this.epicMap = epicMap;
+    }
+
+    public Map<Integer, SubTask> getSubMap() {
+        return subMap;
+    }
+
+    public void setSubMap(Map<Integer, SubTask> subMap) {
+        this.subMap = subMap;
+    }
+
+    public HistoryManager getManagerHistory() {
+        return managerHistory;
+    }
+
+    public void setManagerHistory(HistoryManager managerHistory) {
+        this.managerHistory = managerHistory;
+    }
 
     // Получение списка задач каждого типа
     @Override
