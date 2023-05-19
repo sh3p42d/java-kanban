@@ -12,11 +12,6 @@ import java.util.Map;
 
 public class FileBackedTasksManager extends InMemoryTaskManager {
     private final String path;
-    private final Map<Integer, Task> taskMap = super.getTaskMap();
-    private final Map<Integer, EpicTask> epicMap = super.getEpicMap();
-    private final Map<Integer, SubTask> subMap = super.getSubMap();
-    private final HistoryManager managerHistory = super.getManagerHistory();
-
     public FileBackedTasksManager(String path) {
         this.path = path;
     }
@@ -24,7 +19,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     public static void main(String[] args) {
         String filePath = "resources/tasks.csv";
 
-        FileBackedTasksManager writerManager = new FileBackedTasksManager(filePath);
+        FileBackedTasksManager writerManager = (FileBackedTasksManager) Managers.getDefaultFileManager(filePath);
         TasksForTest.crudTasks(writerManager);
         System.out.println("\nЗадачи и история, которые сохранились в файл:");
         System.out.println(writerManager.getTaskMap());
@@ -44,7 +39,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     private void save() {
         Path filePath = Path.of(path);
         Map<Integer, Task> allMap = allMapMerge();
-        String history = historyToString(managerHistory);
+        String history = historyToString(super.getManagerHistory());
         String fileHead = "id,type,name,status,description,epic\n";
 
         try (BufferedWriter bw = Files.newBufferedWriter(filePath)) {
@@ -55,8 +50,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 throw new ManagerSaveException("Нет задач и истории для записи");
             } else if (allMap.values().isEmpty()) {
                 throw new ManagerSaveException("Нет задач для записи");
-            } else if (history.isEmpty()) {
-                throw new ManagerSaveException("Нет истории для записи");
             }
 
             for (Map.Entry<Integer, Task> entry : allMap.entrySet()) {
@@ -67,14 +60,15 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         } catch (ManagerSaveException e) {
             System.out.println(e.getMessage());
         } catch (IOException e) {
-            e.getMessage();
+            throw new ManagerSaveException("Ошибка при записи в файл");
         }
     }
 
     private Map<Integer, Task> allMapMerge() {
-        Map<Integer, Task> allMap = new HashMap<>(taskMap);
-        allMap.putAll(epicMap);
-        allMap.putAll(subMap);
+        // Собираем Map'ы из родителя
+        Map<Integer, Task> allMap = new HashMap<>(super.getTaskMap());
+        allMap.putAll(super.getEpicMap());
+        allMap.putAll(super.getSubMap());
         return allMap;
     }
 
@@ -101,7 +95,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 task.getTaskName() + "," + task.getTaskStatus() + "," + task.getTaskDescription();
 
         if (getType(task).equals(TasksType.SUBTASK)) {
-            strTask = strTask + "," + subMap.get(task.getTaskId()).getEpicId();
+            strTask = strTask + "," + super.getSubMap().get(task.getTaskId()).getEpicId();
         }
 
         return strTask;
@@ -119,13 +113,15 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
     // Загрузка задач и истории из файла
     private static FileBackedTasksManager loadFromFile(File file) {
-        FileBackedTasksManager manager = new FileBackedTasksManager(file.getPath());
+        FileBackedTasksManager manager = (FileBackedTasksManager) Managers.getDefaultFileManager(file.getPath());
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            Map<Integer, Task> newTaskMap = new HashMap<>();
-            Map<Integer, EpicTask> newEpicMap = new HashMap<>();
-            Map<Integer, SubTask> newSubMap = new HashMap<>();
-            HistoryManager newManagerHistory = Managers.getDefaultHistory();
+            // Нельзя напрямую изменять Map'ы родителя из static метода, поэтому
+            // собираем пустые Map'ы, заполняем содержимым файла и отдаем обратно в родителя
+            Map<Integer, Task> newTaskMap = manager.getTaskMap();
+            Map<Integer, EpicTask> newEpicMap = manager.getEpicMap();
+            Map<Integer, SubTask> newSubMap = manager.getSubMap();
+            HistoryManager newManagerHistory = manager.getManagerHistory();
 
             String fileString;
             List<String> taskList = new ArrayList<>();
@@ -134,8 +130,15 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 taskList.add(fileString);
             }
 
+            // Проверяем есть ли история
+            int historyLine = 2;
+            boolean emptyHistory = taskList.get(taskList.size() - 1).isEmpty();
+            if (!emptyHistory) {
+                historyLine += 1;
+            }
+
             // Записываем задачи в нужные Map'ы
-            for (int i = 1; i <= (taskList.size() - 3); i++) {
+            for (int i = 1; i <= (taskList.size() - historyLine); i++) {
                 String taskType = taskList.get(i).split(",")[1];
                 Integer taskId = Integer.valueOf(taskList.get(i).split(",")[0]);
 
@@ -152,30 +155,29 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 } else {
                     newSubMap.put(taskId, fromStringSub(taskList.get(i)));
                 }
+            }
 
-                // Когда записали последнюю задачу, добавляем подзадачи в эпики
-                // и определяем статусы эпиков
-                if (i == (taskList.size() - 3)) {
-                    for (SubTask subTask : newSubMap.values()) {
-                        EpicTask epic = newEpicMap.get(subTask.getEpicId());
-                        epic.addSub(subTask.getTaskId());
-                    }
-                    updateAllEpicStatusesFromFile(newEpicMap, newSubMap);
-                }
+            // Добавляем подзадачи в эпики
+            for (SubTask subTask : newSubMap.values()) {
+                EpicTask epic = newEpicMap.get(subTask.getEpicId());
+                epic.addSub(subTask.getTaskId());
             }
 
             // Считываем историю из файла в менеджера истории
-            List<Integer> newHistory = historyFromString(taskList.get(taskList.size() - 1));
-            for (Integer taskIdHistory : newHistory) {
-                Task historyTask;
-                if (newTaskMap.containsKey(taskIdHistory)) {
-                    historyTask = newTaskMap.get(taskIdHistory);
-                } else if (newEpicMap.containsKey(taskIdHistory)) {
-                    historyTask = newEpicMap.get(taskIdHistory);
-                } else {
-                    historyTask = newSubMap.get(taskIdHistory);
+            if (!emptyHistory) {
+                List<Integer> newHistory = historyFromString(taskList.get(taskList.size() - 1));
+
+                for (Integer taskIdHistory : newHistory) {
+                    Task historyTask;
+                    if (newTaskMap.containsKey(taskIdHistory)) {
+                        historyTask = newTaskMap.get(taskIdHistory);
+                    } else if (newEpicMap.containsKey(taskIdHistory)) {
+                        historyTask = newEpicMap.get(taskIdHistory);
+                    } else {
+                        historyTask = newSubMap.get(taskIdHistory);
+                    }
+                    newManagerHistory.add(historyTask);
                 }
-                newManagerHistory.add(historyTask);
             }
 
             manager.setTaskMap(newTaskMap);
@@ -183,7 +185,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             manager.setSubMap(newSubMap);
             manager.setManagerHistory(newManagerHistory);
         } catch (IOException e) {
-            e.getMessage();
+            e.printStackTrace();
         }
         return manager;
     }
@@ -200,6 +202,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         String[] taskString = value.split(",");
 
         EpicTask task = new EpicTask(taskString[2], taskString[4]);
+        task.setTaskStatus(statusFromFile(taskString[3]));
         task.setTaskId(Integer.parseInt(taskString[0]));
         return task;
     }
@@ -231,40 +234,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             historyList.add(Integer.valueOf(s));
         }
         return historyList;
-    }
-
-    private static void updateAllEpicStatusesFromFile(Map<Integer, EpicTask> newEpicMap,
-                                                      Map<Integer, SubTask> newSubMap) {
-        for (EpicTask epic : newEpicMap.values()) {
-            ArrayList<Integer> epicSubIds = epic.getSubIds();
-            ArrayList<StatusOfTask> statuses = new ArrayList<>();
-
-            for (Integer epicSubId : epicSubIds) {
-                statuses.add(newSubMap.get(epicSubId).getTaskStatus());
-            }
-            int newStatus = 0;
-            int doneStatus = 0;
-
-            for (StatusOfTask status : statuses) {
-                if (status.equals(StatusOfTask.NEW)) {
-                    newStatus++;
-                } else if (status.equals(StatusOfTask.DONE)) {
-                    doneStatus++;
-                } else {
-                    newStatus = 0;
-                    doneStatus = 0;
-                    break;
-                }
-            }
-
-            if (newStatus == statuses.size()) {
-                epic.setTaskStatus(StatusOfTask.NEW);
-            } else if (doneStatus == statuses.size()) {
-                epic.setTaskStatus(StatusOfTask.DONE);
-            } else {
-                epic.setTaskStatus(StatusOfTask.IN_PROGRESS);
-            }
-        }
     }
 
     // Добавляем save в методы от класса-родителя InMemoryTaskManager
