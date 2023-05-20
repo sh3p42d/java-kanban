@@ -116,11 +116,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         FileBackedTasksManager manager = (FileBackedTasksManager) Managers.getDefaultFileManager(file.getPath());
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            // Нельзя напрямую изменять Map'ы родителя из static метода, поэтому
-            // собираем пустые Map'ы, заполняем содержимым файла и отдаем обратно в родителя
-            Map<Integer, Task> newTaskMap = manager.getTaskMap();
-            Map<Integer, EpicTask> newEpicMap = manager.getEpicMap();
-            Map<Integer, SubTask> newSubMap = manager.getSubMap();
             HistoryManager newManagerHistory = manager.getManagerHistory();
 
             String fileString;
@@ -149,17 +144,17 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 }
 
                 if (taskType.equals(TasksType.TASK.toString())) {
-                    newTaskMap.put(taskId, fromStringTask(taskList.get(i)));
+                    manager.taskMap.put(taskId, fromStringTask(taskList.get(i)));
                 } else if (taskType.equals(TasksType.EPIC.toString())) {
-                    newEpicMap.put(taskId, fromStringEpic(taskList.get(i)));
+                    manager.epicMap.put(taskId, fromStringEpic(taskList.get(i)));
                 } else {
-                    newSubMap.put(taskId, fromStringSub(taskList.get(i)));
+                    manager.subMap.put(taskId, fromStringSub(taskList.get(i)));
                 }
             }
 
             // Добавляем подзадачи в эпики
-            for (SubTask subTask : newSubMap.values()) {
-                EpicTask epic = newEpicMap.get(subTask.getEpicId());
+            for (SubTask subTask : manager.subMap.values()) {
+                EpicTask epic = manager.epicMap.get(subTask.getEpicId());
                 epic.addSub(subTask.getTaskId());
             }
 
@@ -169,20 +164,17 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
                 for (Integer taskIdHistory : newHistory) {
                     Task historyTask;
-                    if (newTaskMap.containsKey(taskIdHistory)) {
-                        historyTask = newTaskMap.get(taskIdHistory);
-                    } else if (newEpicMap.containsKey(taskIdHistory)) {
-                        historyTask = newEpicMap.get(taskIdHistory);
+                    if (manager.taskMap.containsKey(taskIdHistory)) {
+                        historyTask = manager.taskMap.get(taskIdHistory);
+                    } else if (manager.epicMap.containsKey(taskIdHistory)) {
+                        historyTask = manager.epicMap.get(taskIdHistory);
                     } else {
-                        historyTask = newSubMap.get(taskIdHistory);
+                        historyTask = manager.subMap.get(taskIdHistory);
                     }
                     newManagerHistory.add(historyTask);
                 }
             }
 
-            manager.setTaskMap(newTaskMap);
-            manager.setEpicMap(newEpicMap);
-            manager.setSubMap(newSubMap);
             manager.setManagerHistory(newManagerHistory);
         } catch (IOException e) {
             e.printStackTrace();
