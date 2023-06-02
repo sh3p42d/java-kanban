@@ -38,4 +38,7 @@ public interface TaskManager {
     Integer deleteTaskById(Integer id);
     Integer deleteEpicById(Integer id);
     Integer deleteSubById(Integer id);
+
+    // Очистка истории
+    void clearHistory();
 }

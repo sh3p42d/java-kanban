@@ -5,6 +5,9 @@ import Tasks.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,31 +19,12 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         this.path = path;
     }
 
-    public static void main(String[] args) {
-        String filePath = "resources/tasks.csv";
-
-        FileBackedTasksManager writerManager = (FileBackedTasksManager) Managers.getDefaultFileManager(filePath);
-        TasksForTest.crudTasks(writerManager);
-        System.out.println("\nЗадачи и история, которые сохранились в файл:");
-        System.out.println(writerManager.getTaskMap());
-        System.out.println(writerManager.getEpicMap());
-        System.out.println(writerManager.getSubMap());
-        System.out.println(writerManager.getManagerHistory().getHistory());
-
-        FileBackedTasksManager readerManager = loadFromFile(new File(filePath));
-        System.out.println("\nЗадачи и история, которые выгрузили из файла:");
-        System.out.println(readerManager.getTaskMap());
-        System.out.println(readerManager.getEpicMap());
-        System.out.println(readerManager.getSubMap());
-        System.out.println(readerManager.getManagerHistory().getHistory());
-    }
-
     // Сохранение задач и истории в файл
     private void save() {
         Path filePath = Path.of(path);
         Map<Integer, Task> allMap = allMapMerge();
         String history = historyToString(super.getManagerHistory());
-        String fileHead = "id,type,name,status,description,epic\n";
+        String fileHead = "id,type,name,status,description,start,duration,epic\n";
 
         try (BufferedWriter bw = Files.newBufferedWriter(filePath)) {
             bw.flush();
@@ -48,8 +32,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
             if (allMap.isEmpty() && history.isEmpty()) {
                 throw new ManagerSaveException("Нет задач и истории для записи");
-            } else if (allMap.values().isEmpty()) {
-                throw new ManagerSaveException("Нет задач для записи");
             }
 
             for (Map.Entry<Integer, Task> entry : allMap.entrySet()) {
@@ -94,6 +76,12 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         String strTask = task.getTaskId() + "," + getType(task) + "," +
                 task.getTaskName() + "," + task.getTaskStatus() + "," + task.getTaskDescription();
 
+        if (task.getStartTime() != null) {
+            strTask = strTask  + "," +
+                    task.getStartTime().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")) + "," +
+                    task.getDuration().toMinutes();
+        }
+
         if (getType(task).equals(TasksType.SUBTASK)) {
             strTask = strTask + "," + super.getSubMap().get(task.getTaskId()).getEpicId();
         }
@@ -112,7 +100,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
     // Загрузка задач и истории из файла
-    private static FileBackedTasksManager loadFromFile(File file) {
+    public static FileBackedTasksManager loadFromFile(File file) {
         FileBackedTasksManager manager = (FileBackedTasksManager) Managers.getDefaultFileManager(file.getPath());
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
@@ -127,7 +115,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
             // Проверяем есть ли история
             int historyLine = 2;
-            boolean emptyHistory = taskList.get(taskList.size() - 1).isEmpty();
+            boolean emptyHistory = taskList.get(taskList.size() - 1)
+                    .equals("id,type,name,status,description,start,duration,epic")
+                    || taskList.get(taskList.size() - 1).isEmpty();
             if (!emptyHistory) {
                 historyLine += 1;
             }
@@ -186,6 +176,12 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         String[] taskString = value.split(",");
 
         Task task = new Task(taskString[2], taskString[4], statusFromFile(taskString[3]));
+
+        if (taskString.length == 7) {
+            task.setStartTime(LocalDateTime.parse(taskString[5], DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+            task.setDuration(Duration.ofMinutes(Long.parseLong(taskString[6])));
+        }
+
         task.setTaskId(Integer.parseInt(taskString[0]));
         return task;
     }
@@ -194,6 +190,12 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         String[] taskString = value.split(",");
 
         EpicTask task = new EpicTask(taskString[2], taskString[4]);
+
+        if (taskString.length == 7) {
+            task.setStartTime(LocalDateTime.parse(taskString[5], DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+            task.setDuration(Duration.ofMinutes(Long.parseLong(taskString[6])));
+        }
+
         task.setTaskStatus(statusFromFile(taskString[3]));
         task.setTaskId(Integer.parseInt(taskString[0]));
         return task;
@@ -202,8 +204,16 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     private static SubTask fromStringSub(String value) {
         String[] taskString = value.split(",");
 
-        SubTask task = new SubTask(taskString[2], taskString[4], statusFromFile(taskString[3]),
-                Integer.parseInt(taskString[5]));
+        SubTask task = new SubTask(taskString[2], taskString[4], statusFromFile(taskString[3]), -1);
+
+        if (taskString.length == 8) {
+            task.setStartTime(LocalDateTime.parse(taskString[5], DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+            task.setDuration(Duration.ofMinutes(Long.parseLong(taskString[6])));
+            task.setEpicId(Integer.parseInt(taskString[7]));
+        } else {
+            task.setEpicId(Integer.parseInt(taskString[5]));
+        }
+
         task.setTaskId(Integer.parseInt(taskString[0]));
 
         return task;
@@ -331,5 +341,12 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         super.deleteSubById(id);
         save();
         return id;
+    }
+
+    // История просмотров
+    @Override
+    public void clearHistory() {
+        super.clearHistory();
+        save();
     }
 }

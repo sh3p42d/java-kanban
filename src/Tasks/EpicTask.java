@@ -1,13 +1,22 @@
 package Tasks;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class EpicTask extends Task {
     private ArrayList<Integer> subIds = new ArrayList<>(); // ID всех подзадач из эпика
+    private LocalDateTime endTime;
 
     public EpicTask(String taskName, String taskDescription) {
-        // Пустой эпик может быть только в статусе NEW, а при добавлении подзадач, статус будет обновляться
         super(taskName, taskDescription, StatusOfTask.NEW);
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime() {
+        this.endTime = getStartTime().plusMinutes(getDuration().toMinutes());
     }
 
     public void setSubIds(ArrayList<Integer> subIds) {
@@ -16,11 +25,6 @@ public class EpicTask extends Task {
 
     public ArrayList<Integer> getSubIds() {
         return subIds;
-    }
-
-    @Override
-    public String toString() {
-        return "Epic" + super.toString() + "{SubTasksIds='" + subIds + "'}";
     }
 
     public void addSub(int subId) {
@@ -38,5 +42,10 @@ public class EpicTask extends Task {
             }
             subIds.remove(i);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Epic" + super.toString() + "{SubTasksIds='" + subIds + "'}";
     }
 }
