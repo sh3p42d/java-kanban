@@ -1,11 +1,4 @@
 id,type,name,status,description,start,duration,epic
-1,TASK,First Simple New,NEW,task id = 1,12.02.2024 12:00,150
-2,TASK,Second Simple In progress,IN_PROGRESS,task id = 2,12.03.2024 12:00,150
-3,TASK,Third Simple done,DONE,task id = 3,12.04.2024 12:00,150
-4,EPIC,First Epic,NEW,epic id = 4,10.01.2024 12:00,300
-5,EPIC,Second Epic,NEW,epic id = 5,13.01.2024 12:00,150
-6,EPIC,Third Epic,NEW,epic id = 6
-11,EPIC,Epic for test,DONE,let's drink beer,12.01.2024 12:00,150
-12,SUBTASK,New test Sub name,DONE,New test Sub description,12.01.2024 12:00,150,11
+1,EPIC,Epic for test,NEW,let's drink beer
 
-1,2,3,4,5,6,12
+1

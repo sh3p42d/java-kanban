@@ -4,11 +4,13 @@ import Tasks.StatusOfTask;
 import Tasks.SubTask;
 import Tasks.Task;
 
+import org.junit.jupiter.api.Test;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class TasksManagerTest <T extends TaskManager> {
+    protected T manager;
 
     private final Task task1 = new Task("First Simple New",
             "task id = 1", StatusOfTask.NEW, "12.02.2024 12:00", 150);
@@ -32,6 +34,169 @@ public abstract class TasksManagerTest <T extends TaskManager> {
             "sub id = 9", StatusOfTask.DONE, -1);
     private final SubTask subTask4 = new SubTask("Fourth Sub",
             "sub id = 10", StatusOfTask.NEW, -1, "13.01.2024 12:00", 150);
+
+    // Получение списка всех задач каждого типа
+    @Test
+    public void shouldGetAllTypeTasks() {
+        assertEquals(getAllTasks(), manager.getTaskMap());
+        assertEquals(getAllEpics(), manager.getEpicMap());
+        assertEquals(getAllSubs(), manager.getSubMap());
+    }
+
+    // Удаление всех задач каждого типа
+    @Test
+    public void shouldDeleteAllTypeTasks() {
+        manager.deleteTasks();
+        assertTrue(manager.getTaskMap().isEmpty());
+
+        manager.deleteEpicTasks();
+        assertTrue(manager.getEpicMap().isEmpty());
+
+        generateShouldDeleteAllSubTasks(manager);
+        assertTrue(manager.getSubMap().isEmpty());
+    }
+
+    // Получение задачи каждого типа по ID
+    @Test
+    public void shouldGetTaskById() {
+        generateShouldGetTaskById(manager);
+    }
+
+    @Test
+    public void shouldGetEpicTaskById() {
+        generateShouldGetEpicTaskById(manager);
+    }
+
+    @Test
+    public void shouldGetSubTaskById() {
+        generateShouldGetSubTaskById(manager);
+    }
+
+    // Получение списка всех подзадач эпика по ID
+    @Test
+    public void shouldGetSubTasksFromEpic() {
+        generateShouldGetSubTasksFromEpic(manager);
+    }
+
+    // Создание каждого типа задач
+    @Test
+    public void shouldCreateTask() {
+        generateShouldCreateTask(manager);
+    }
+
+    @Test
+    public void shouldCreateTaskWithEmptyTasksList() {
+        generateShouldCreateTaskWithEmptyTasksList(manager);
+    }
+
+    @Test
+    public void shouldCreateEpicTask() {
+        generateShouldCreateEpicTask(manager);
+    }
+
+    @Test
+    public void shouldCreateEpicTaskWithEmptyEpicsList() {
+        generateShouldCreateEpicTaskWithEmptyEpicsList(manager);
+    }
+
+    @Test
+    public void shouldCreateSubTask() {
+        shouldCreateSubTask(manager);
+    }
+
+    @Test
+    public void shouldCreateSubTaskWithEmptySubsList() {
+        generateShouldCreateSubTaskWithEmptySubsList(manager);
+    }
+
+    // Обновление задач каждого типа
+    @Test
+    public void shouldUpdateTask() {
+        generateShouldUpdateTask(manager);
+    }
+
+    @Test
+    public void shouldUpdateTaskWithEmptyTasksList() {
+        generateShouldUpdateTaskWithEmptyTasksList(manager);
+    }
+
+    @Test
+    public void shouldUpdateEpicTask() {
+        generateShouldUpdateEpicTask(manager);
+    }
+
+    @Test
+    public void shouldUpdateEpicTaskWithEmptyEpicsList() {
+        generateShouldUpdateEpicTaskWithEmptyEpicsList(manager);
+    }
+
+    @Test
+    public void shouldUpdateSubTask() {
+        generateShouldUpdateSubTask(manager);
+    }
+
+    @Test
+    public void shouldUpdateSubTaskWithEmptySubsList() {
+        generateShouldUpdateSubTaskWithEmptySubsList(manager);
+    }
+
+    // Удаление задачи по ID
+    @Test
+    public void shouldDeleteTaskById() {
+        generateShouldDeleteTaskById(manager);
+    }
+
+    @Test
+    public void shouldDeleteTaskByIdWithEmptyTasksList() {
+        generateShouldDeleteTaskByIdWithEmptyTasksList(manager);
+    }
+
+    @Test
+    public void shouldNotDeleteTaskByWrongId() {
+        generateShouldNotDeleteTaskByWrongId(manager);
+    }
+
+    @Test
+    public void shouldDeleteEpicTaskById() {
+        generateShouldDeleteEpicTaskById(manager);
+    }
+
+    @Test
+    public void shouldDeleteEpicTaskByIdWithEmptyEpicsList() {
+        generateShouldDeleteEpicTaskByIdWithEmptyEpicsList(manager);
+    }
+
+    @Test
+    public void shouldNotDeleteEpicByWrongId() {
+        generateShouldNotDeleteEpicByWrongId(manager);
+    }
+
+    @Test
+    public void shouldDeleteSubTaskById() {
+        generateShouldDeleteSubTaskById(manager);
+    }
+
+    @Test
+    public void shouldDeleteSubTaskByIdWithEmptySubsList() {
+        generateShouldDeleteSubTaskByIdWithEmptySubsList(manager);
+    }
+
+    @Test
+    public void shouldNotDeleteSubByWrongId() {
+        generateShouldNotDeleteSubByWrongId(manager);
+    }
+
+    // Тесты приоритетов и пересечений
+    @Test
+    public void shouldGetSort() {
+        manager.getPrioritizedTasks();
+        assertEquals(generateSortedSet(), new ArrayList<>(manager.getPrioritizedTasks()));
+    }
+
+    @Test public void shouldNotCreateTasksWhenTimeIsBusy() {
+        generateShouldNotCreateTasksWhenTimeIsBusy(manager);
+        assertEquals(1, manager.getTaskMap().size());
+    }
 
     public void createAllTestTask(T manager) {
         // Создаем задачи
@@ -95,13 +260,13 @@ public abstract class TasksManagerTest <T extends TaskManager> {
 
     public List<Task> generateSortedSet() {
         List<Task> setTasks = new ArrayList<>();
-        setTasks.add(epicTask1);
+        setTasks.add(subTask1);
         setTasks.add(subTask2);
-        setTasks.add(epicTask2);
+        setTasks.add(subTask4);
         setTasks.add(task1);
         setTasks.add(task2);
         setTasks.add(task3);
-        setTasks.add(epicTask3);
+        setTasks.add(subTask3);
         return setTasks;
     }
 
@@ -171,6 +336,13 @@ public abstract class TasksManagerTest <T extends TaskManager> {
         return newSub;
     }
 
+    public NullPointerException executeDeleteTask(T manager, int id) {
+        return assertThrows(
+                NullPointerException.class,
+                () -> manager.deleteTaskById(id)
+        );
+    }
+
     public NullPointerException executeDeleteEpic(T manager, int id) {
         return assertThrows(
                 NullPointerException.class,
@@ -184,71 +356,6 @@ public abstract class TasksManagerTest <T extends TaskManager> {
                 () -> manager.deleteSubById(id)
         );
     }
-
-    public List<Task> generateHistoryWithDuplicates(T manager) {
-        getHistoryAllTestTask(manager);
-        getHistoryAllTestTask(manager);
-        getHistoryAllTestTask(manager);
-
-        List<Task> history = new ArrayList<>(manager.getTasks());
-        history.addAll(manager.getEpicTasks());
-        history.addAll(manager.getSubTasks());
-
-        return history;
-    }
-
-    public List<Task> generateHistoryWithDeletions(T manager) {
-        manager.deleteTaskById(1);
-        manager.deleteEpicById(4);
-        manager.deleteSubById(10);
-
-        List<Task> history = new ArrayList<>(manager.getTasks());
-        history.addAll(manager.getEpicTasks());
-        history.addAll(manager.getSubTasks());
-
-        return history;
-    }
-
-    public List<Task> generateHistoryWithDeletionsFromStartMidEnd(T manager) {
-        manager.clearHistory();
-
-        // Формируем контрольный список для проверки истории
-        List<Task> history = new ArrayList<>();
-        history.add(manager.getTask(3));
-        history.add(manager.getTask(1));
-        history.add(manager.getEpic(5));
-        history.add(manager.getEpic(4));
-        history.add(manager.getSub(9));
-        history.add(manager.getSub(7));
-
-        history.remove(manager.getTask(3));
-        manager.deleteTaskById(3);
-
-
-        history.remove(manager.getEpic(5));
-        history.remove(manager.getSub(9));
-        manager.deleteEpicById(5);
-
-        history.remove(manager.getSub(7));
-        manager.deleteSubById(7);
-
-        return history;
-    }
-
-    public List<Task> generateHistoryAfterClear(T manager) {
-        manager.clearHistory();
-
-        List<Task> history = new ArrayList<>();
-        history.add(manager.getTask(3));
-        history.add(manager.getTask(1));
-        history.add(manager.getEpic(5));
-        history.add(manager.getEpic(4));
-        history.add(manager.getSub(9));
-        history.add(manager.getSub(7));
-
-        return history;
-    }
-
 
     public void generateShouldDeleteAllSubTasks(T manager) {
         manager.deleteSubTasks();
@@ -474,9 +581,9 @@ public abstract class TasksManagerTest <T extends TaskManager> {
         Task testTask = createTestTask(manager);
         int sizeBefore = manager.getTasks().size();
 
-        manager.deleteTaskById(0);
-        manager.deleteTaskById(-1);
-        manager.deleteTaskById(9999);
+        assertEquals(NullPointerException.class, executeDeleteTask(manager, 0).getClass());
+        assertEquals(NullPointerException.class, executeDeleteTask(manager, -1).getClass());
+        assertEquals(NullPointerException.class, executeDeleteTask(manager, 9999).getClass());
 
         assertEquals(sizeBefore, manager.getTasks().size());
         assertNotNull(manager.getTask(testTask.getTaskId()));

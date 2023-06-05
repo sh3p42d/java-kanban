@@ -11,10 +11,6 @@ public class EpicTask extends Task {
         super(taskName, taskDescription, StatusOfTask.NEW);
     }
 
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
     public void setEndTime() {
         this.endTime = getStartTime().plusMinutes(getDuration().toMinutes());
     }
