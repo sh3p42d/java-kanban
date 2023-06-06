@@ -40,8 +40,8 @@ public class InMemoryTaskManager implements TaskManager {
             if (setTask.getStartTime() == null) {
                 busy = false;
             // Данная проверка необходима, при обновлении полей задач/подзадач
-            } else if (setTaskStart.equals(taskStart) &&
-                    setTaskEnd.equals(taskEnd) &&
+            } else if (Objects.equals(setTaskStart, taskStart) &&
+                    Objects.equals(setTaskEnd, taskEnd) &&
                     setTask.getTaskId() == task.getTaskId()) {
 
                 busy = false;
@@ -51,13 +51,11 @@ public class InMemoryTaskManager implements TaskManager {
                     busy = false;
                 } else {
                     busy = true;
+                    System.out.println("Время задачи: " + task);
+                    System.out.println("пересекается с другой: " + setTask);
                     break;
                 }
             }
-        }
-
-        if (busy) {
-            System.out.println("В это время выполняется другая задача!");
         }
         return busy;
     }
@@ -74,26 +72,23 @@ public class InMemoryTaskManager implements TaskManager {
         this.nextId = nextId;
     }
 
-    @Override
-    public Map<Integer, Task> getTaskMap() {
+    protected Map<Integer, Task> getTaskMap() {
         return taskMap;
     }
 
-    @Override
-    public Map<Integer, EpicTask> getEpicMap() {
+    protected Map<Integer, EpicTask> getEpicMap() {
         return epicMap;
     }
 
-    @Override
-    public Map<Integer, SubTask> getSubMap() {
+    protected Map<Integer, SubTask> getSubMap() {
         return subMap;
     }
 
-    public HistoryManager getManagerHistory() {
+    protected HistoryManager getManagerHistory() {
         return managerHistory;
     }
 
-    public void setManagerHistory(HistoryManager managerHistory) {
+    protected void setManagerHistory(HistoryManager managerHistory) {
         this.managerHistory = managerHistory;
     }
 

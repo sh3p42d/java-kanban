@@ -38,153 +38,347 @@ public abstract class TasksManagerTest <T extends TaskManager> {
     // Получение списка всех задач каждого типа
     @Test
     public void shouldGetAllTypeTasks() {
-        assertEquals(getAllTasks(), manager.getTaskMap());
-        assertEquals(getAllEpics(), manager.getEpicMap());
-        assertEquals(getAllSubs(), manager.getSubMap());
+        assertEquals(getAllTasks(), manager.getTasks());
+        assertEquals(getAllEpics(), manager.getEpicTasks());
+        assertEquals(getAllSubs(), manager.getSubTasks());
     }
 
     // Удаление всех задач каждого типа
     @Test
     public void shouldDeleteAllTypeTasks() {
         manager.deleteTasks();
-        assertTrue(manager.getTaskMap().isEmpty());
+        assertTrue(manager.getTasks().isEmpty());
 
         manager.deleteEpicTasks();
-        assertTrue(manager.getEpicMap().isEmpty());
+        assertTrue(manager.getEpicTasks().isEmpty());
 
-        generateShouldDeleteAllSubTasks(manager);
-        assertTrue(manager.getSubMap().isEmpty());
+        manager.deleteSubTasks();
+
+        for (EpicTask epic : manager.getEpicTasks()) {
+            assertEquals(StatusOfTask.NEW, epic.getTaskStatus());
+            assertTrue(epic.getSubIds().isEmpty());
+        }
+        assertTrue(manager.getSubTasks().isEmpty());
     }
 
     // Получение задачи каждого типа по ID
     @Test
     public void shouldGetTaskById() {
-        generateShouldGetTaskById(manager);
+        // Позитивная проверка
+        assertEquals(getTestTask(), manager.getTask(getTestTask().getTaskId()));
+
+        // Негативные проверки
+        assertNull(manager.getTask(0));
+        assertNull(manager.getTask(4));
+
+        manager.deleteTasks();
+        assertNull(manager.getTask(getTestTask().getTaskId()));
     }
 
     @Test
     public void shouldGetEpicTaskById() {
-        generateShouldGetEpicTaskById(manager);
+        assertEquals(getTestEpic().toString(), manager.getEpic(getTestEpic().getTaskId()).toString());
+        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(getTestEpic().getTaskId()).getTaskStatus());
+
+        assertNull(manager.getEpic(-3));
+        assertNull(manager.getEpic(7));
+
+        manager.deleteEpicTasks();
+        assertNull(manager.getEpic(getTestEpic().getTaskId()));
     }
 
     @Test
     public void shouldGetSubTaskById() {
-        generateShouldGetSubTaskById(manager);
+        assertEquals(getTestSub().toString(), manager.getSub(getTestSub().getTaskId()).toString());
+        assertEquals(4, manager.getSub(getTestSub().getTaskId()).getEpicId());
+
+        assertNull(manager.getSub(6));
+        assertNull(manager.getSub(+11));
+
+        manager.deleteSubTasks();
+        assertNull(manager.getSub(getTestSub().getTaskId()));
     }
 
     // Получение списка всех подзадач эпика по ID
     @Test
     public void shouldGetSubTasksFromEpic() {
-        generateShouldGetSubTasksFromEpic(manager);
+        assertEquals(List.of(manager.getSub(7), manager.getSub(8)), manager.getSubFromEpic(4));
+
+        assertTrue(manager.getEpic(6).getSubIds().isEmpty());
+
+        manager.deleteSubTasks();
+        assertTrue(manager.getEpic(4).getSubIds().isEmpty());
     }
 
     // Создание каждого типа задач
     @Test
     public void shouldCreateTask() {
-        generateShouldCreateTask(manager);
+        Task testTask = createTestTask(manager);
+
+        assertEquals(testTask, manager.getTask(testTask.getTaskId()));
+        assertNull(manager.getEpic(testTask.getTaskId()));
+        assertNull(manager.getSub(testTask.getTaskId()));
     }
 
     @Test
     public void shouldCreateTaskWithEmptyTasksList() {
-        generateShouldCreateTaskWithEmptyTasksList(manager);
+        manager.deleteTasks();
+        Task testTask = createTestTask(manager);
+
+        assertEquals(testTask, manager.getTask(testTask.getTaskId()));
+        assertNull(manager.getEpic(testTask.getTaskId()));
+        assertNull(manager.getSub(testTask.getTaskId()));
     }
 
     @Test
     public void shouldCreateEpicTask() {
-        generateShouldCreateEpicTask(manager);
-    }
+        EpicTask testEpic = createTestEpic(manager);
+        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
+
+        assertEquals(testEpic, manager.getEpic(testEpic.getTaskId()));
+        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
+
+        assertNull(manager.getTask(testEpic.getTaskId()));
+        assertNull(manager.getSub(testEpic.getTaskId()));    }
 
     @Test
     public void shouldCreateEpicTaskWithEmptyEpicsList() {
-        generateShouldCreateEpicTaskWithEmptyEpicsList(manager);
-    }
+        manager.deleteEpicTasks();
+        EpicTask testEpic = createTestEpic(manager);
+        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
+
+        assertEquals(testEpic, manager.getEpic(testEpic.getTaskId()));
+        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
+
+        assertNull(manager.getTask(testEpic.getTaskId()));
+        assertNull(manager.getSub(testEpic.getTaskId()));    }
 
     @Test
     public void shouldCreateSubTask() {
-        shouldCreateSubTask(manager);
+        EpicTask testEpic = createTestEpic(manager);
+        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
+
+        assertEquals(testSub, manager.getSub(testSub.getTaskId()));
+        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
+
+        assertNull(manager.getTask(testSub.getTaskId()));
+        assertNull(manager.getEpic(testSub.getTaskId()));
     }
 
     @Test
     public void shouldCreateSubTaskWithEmptySubsList() {
-        generateShouldCreateSubTaskWithEmptySubsList(manager);
-    }
+        manager.deleteSubTasks();
+        EpicTask testEpic = createTestEpic(manager);
+        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
+
+        assertEquals(testSub, manager.getSub(testSub.getTaskId()));
+        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
+
+        assertNull(manager.getTask(testSub.getTaskId()));
+        assertNull(manager.getEpic(testSub.getTaskId()));    }
 
     // Обновление задач каждого типа
     @Test
     public void shouldUpdateTask() {
-        generateShouldUpdateTask(manager);
+        Task testTask = createTestTask(manager);
+        assertEquals(testTask, manager.getTask(testTask.getTaskId()));
+
+        Task updTask = updateTestTask(testTask);
+        manager.updateTask(updTask);
+
+        assertEquals(updTask, manager.getTask(updTask.getTaskId()));
+        assertNotEquals(testTask, manager.getTask(updTask.getTaskId()));
     }
 
     @Test
     public void shouldUpdateTaskWithEmptyTasksList() {
-        generateShouldUpdateTaskWithEmptyTasksList(manager);
+        manager.deleteTasks();
+        Task testTask = createTestTask(manager);
+        assertEquals(testTask, manager.getTask(testTask.getTaskId()));
+        assertEquals(1, manager.getTasks().size());
+
+        Task updTask = updateTestTask(testTask);
+        manager.updateTask(updTask);
+
+        assertEquals(updTask, manager.getTask(updTask.getTaskId()));
+        assertNotEquals(testTask, manager.getTask(updTask.getTaskId()));
+        assertEquals(1, manager.getTasks().size());
     }
 
     @Test
     public void shouldUpdateEpicTask() {
-        generateShouldUpdateEpicTask(manager);
+        EpicTask testEpic = createTestEpic(manager);
+        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
+        assertEquals(testEpic, manager.getEpic(testEpic.getTaskId()));
+        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
+
+        EpicTask updEpic = updateTestEpic(testEpic);
+        manager.updateEpicTask(updEpic);
+        assertEquals(updEpic, manager.getEpic(updEpic.getTaskId()));
+        assertNotEquals(testEpic, manager.getEpic(updEpic.getTaskId()));
+        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
     }
 
     @Test
     public void shouldUpdateEpicTaskWithEmptyEpicsList() {
-        generateShouldUpdateEpicTaskWithEmptyEpicsList(manager);
+        manager.deleteEpicTasks();
+        EpicTask testEpic = createTestEpic(manager);
+        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
+
+        assertEquals(testEpic, manager.getEpic(testEpic.getTaskId()));
+        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
+        assertEquals(1, manager.getEpicTasks().size());
+
+        EpicTask updEpic = updateTestEpic(testEpic);
+        manager.updateEpicTask(updEpic);
+        assertEquals(updEpic, manager.getEpic(updEpic.getTaskId()));
+        assertNotEquals(testEpic, manager.getEpic(updEpic.getTaskId()));
+        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
+        assertEquals(1, manager.getEpicTasks().size());
     }
 
     @Test
     public void shouldUpdateSubTask() {
-        generateShouldUpdateSubTask(manager);
+        EpicTask testEpic = createTestEpic(manager);
+        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
+        assertEquals(testSub, manager.getSub(testSub.getTaskId()));
+        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
+
+        SubTask updSub = updateTestSub(testSub);
+        manager.updateSubTask(updSub);
+        assertEquals(updSub, manager.getSub(updSub.getTaskId()));
+        assertNotEquals(testSub, manager.getSub(updSub.getTaskId()));
+        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
     }
 
     @Test
     public void shouldUpdateSubTaskWithEmptySubsList() {
-        generateShouldUpdateSubTaskWithEmptySubsList(manager);
+        manager.deleteSubTasks();
+        EpicTask testEpic = createTestEpic(manager);
+        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
+        assertEquals(testSub, manager.getSub(testSub.getTaskId()));
+        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
+        assertEquals(1, manager.getSubTasks().size());
+
+
+        SubTask updSub = updateTestSub(testSub);
+        manager.updateSubTask(updSub);
+        assertEquals(updSub, manager.getSub(updSub.getTaskId()));
+        assertNotEquals(testSub, manager.getSub(updSub.getTaskId()));
+        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
+        assertEquals(1, manager.getSubTasks().size());
     }
 
     // Удаление задачи по ID
     @Test
     public void shouldDeleteTaskById() {
-        generateShouldDeleteTaskById(manager);
+        Task testTask = createTestTask(manager);
+        int sizeBefore = manager.getTasks().size();
+        manager.deleteTaskById(testTask.getTaskId());
+
+        assertEquals(sizeBefore - 1, manager.getTasks().size());
+        assertNull(manager.getTask(testTask.getTaskId()));
     }
 
     @Test
     public void shouldDeleteTaskByIdWithEmptyTasksList() {
-        generateShouldDeleteTaskByIdWithEmptyTasksList(manager);
+        manager.deleteTasks();
+
+        Task testTask = createTestTask(manager);
+        int sizeBefore = manager.getTasks().size();
+        manager.deleteTaskById(testTask.getTaskId());
+
+        assertEquals(sizeBefore - 1, manager.getTasks().size());
+        assertNull(manager.getTask(testTask.getTaskId()));
     }
 
     @Test
     public void shouldNotDeleteTaskByWrongId() {
-        generateShouldNotDeleteTaskByWrongId(manager);
+        Task testTask = createTestTask(manager);
+        int sizeBefore = manager.getTasks().size();
+
+        assertEquals(NullPointerException.class, executeDeleteTask(manager, 0).getClass());
+        assertEquals(NullPointerException.class, executeDeleteTask(manager, -1).getClass());
+        assertEquals(NullPointerException.class, executeDeleteTask(manager, 9999).getClass());
+
+        assertEquals(sizeBefore, manager.getTasks().size());
+        assertNotNull(manager.getTask(testTask.getTaskId()));
     }
 
     @Test
     public void shouldDeleteEpicTaskById() {
-        generateShouldDeleteEpicTaskById(manager);
+        EpicTask testEpic = createTestEpic(manager);
+        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
+        int sizeBefore = manager.getEpicTasks().size();
+        manager.deleteEpicById(testEpic.getTaskId());
+
+        assertEquals(sizeBefore - 1, manager.getEpicTasks().size());
+        assertNull(manager.getEpic(testEpic.getTaskId()));
     }
 
     @Test
     public void shouldDeleteEpicTaskByIdWithEmptyEpicsList() {
-        generateShouldDeleteEpicTaskByIdWithEmptyEpicsList(manager);
+        manager.deleteEpicTasks();
+
+        EpicTask testEpic = createTestEpic(manager);
+        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
+        int sizeBefore = manager.getEpicTasks().size();
+        manager.deleteEpicById(testEpic.getTaskId());
+
+        assertEquals(sizeBefore - 1, manager.getEpicTasks().size());
+        assertNull(manager.getEpic(testEpic.getTaskId()));
     }
 
     @Test
     public void shouldNotDeleteEpicByWrongId() {
-        generateShouldNotDeleteEpicByWrongId(manager);
+        EpicTask testEpic = createTestEpic(manager);
+        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
+        int sizeBefore = manager.getEpicTasks().size();
+
+        assertEquals(NullPointerException.class, executeDeleteEpic(manager, 0).getClass());
+        assertEquals(NullPointerException.class, executeDeleteEpic(manager, -1).getClass());
+        assertEquals(NullPointerException.class, executeDeleteEpic(manager, 9999).getClass());
+
+        assertEquals(sizeBefore, manager.getEpicTasks().size());
+        assertNotNull(manager.getEpic(testEpic.getTaskId()));
     }
 
     @Test
     public void shouldDeleteSubTaskById() {
-        generateShouldDeleteSubTaskById(manager);
+        EpicTask testEpic = createTestEpic(manager);
+        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
+        int sizeBefore = manager.getSubTasks().size();
+        manager.deleteSubById(testSub.getTaskId());
+
+        assertEquals(sizeBefore - 1, manager.getSubTasks().size());
+        assertNull(manager.getSub(testSub.getTaskId()));
     }
 
     @Test
     public void shouldDeleteSubTaskByIdWithEmptySubsList() {
-        generateShouldDeleteSubTaskByIdWithEmptySubsList(manager);
+        manager.deleteSubTasks();
+
+        EpicTask testEpic = createTestEpic(manager);
+        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
+        int sizeBefore = manager.getSubTasks().size();
+        manager.deleteSubById(testSub.getTaskId());
+
+        assertEquals(sizeBefore - 1, manager.getSubTasks().size());
+        assertNull(manager.getSub(testSub.getTaskId()));
     }
 
     @Test
     public void shouldNotDeleteSubByWrongId() {
-        generateShouldNotDeleteSubByWrongId(manager);
-    }
+        EpicTask testEpic = createTestEpic(manager);
+        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
+        int sizeBefore = manager.getSubTasks().size();
+
+        assertEquals(NullPointerException.class, executeDeleteSub(manager, 0).getClass());
+        assertEquals(NullPointerException.class, executeDeleteSub(manager, -1).getClass());
+        assertEquals(NullPointerException.class, executeDeleteSub(manager, 9999).getClass());
+
+        assertEquals(sizeBefore, manager.getSubTasks().size());
+        assertNotNull(manager.getSub(testSub.getTaskId()));    }
 
     // Тесты приоритетов и пересечений
     @Test
@@ -194,8 +388,18 @@ public abstract class TasksManagerTest <T extends TaskManager> {
     }
 
     @Test public void shouldNotCreateTasksWhenTimeIsBusy() {
-        generateShouldNotCreateTasksWhenTimeIsBusy(manager);
-        assertEquals(1, manager.getTaskMap().size());
+        manager.deleteTasks();
+        manager.deleteEpicTasks();
+        manager.deleteSubTasks();
+
+        Task testTask = createTestTask(manager);
+
+        assertEquals(testTask, manager.getTask(testTask.getTaskId()));
+        assertNull(manager.getEpic(testTask.getTaskId()));
+        assertNull(manager.getSub(testTask.getTaskId()));
+
+        createTestTask(manager);
+        assertEquals(1, manager.getTasks().size());
     }
 
     public void createAllTestTask(T manager) {
@@ -230,32 +434,32 @@ public abstract class TasksManagerTest <T extends TaskManager> {
         manager.getSub(10);
     }
 
-    public Map<Integer, Task> getAllTasks() {
-        Map<Integer, Task> taskMap = new HashMap<>();
-        taskMap.put(1, task1);
-        taskMap.put(2, task2);
-        taskMap.put(3, task3);
+    public List<Task> getAllTasks() {
+        List<Task> taskList = new ArrayList<>();
+        taskList.add(task1);
+        taskList.add(task2);
+        taskList.add(task3);
 
-        return taskMap;
+        return taskList;
     }
 
-    public Map<Integer, Task> getAllEpics() {
-        Map<Integer, Task> epicMap = new HashMap<>();
-        epicMap.put(4, epicTask1);
-        epicMap.put(5, epicTask2);
-        epicMap.put(6, epicTask3);
+    public List<EpicTask> getAllEpics() {
+        List<EpicTask> epicList = new ArrayList<>();
+        epicList.add(epicTask1);
+        epicList.add(epicTask2);
+        epicList.add(epicTask3);
 
-        return epicMap;
+        return epicList;
     }
 
-    public Map<Integer, Task> getAllSubs() {
-        Map<Integer, Task> subMap = new HashMap<>();
-        subMap.put(7, subTask1);
-        subMap.put(8, subTask2);
-        subMap.put(9, subTask3);
-        subMap.put(10, subTask4);
+    public List<SubTask> getAllSubs() {
+        List<SubTask> subList = new ArrayList<>();
+        subList.add(subTask1);
+        subList.add(subTask2);
+        subList.add(subTask3);
+        subList.add(subTask4);
 
-        return subMap;
+        return subList;
     }
 
     public List<Task> generateSortedSet() {
@@ -299,7 +503,7 @@ public abstract class TasksManagerTest <T extends TaskManager> {
 
     public SubTask createTestSub(T manager, EpicTask epic, StatusOfTask status) {
         SubTask testSub = new SubTask("Sub for test", "10 liters",
-                status, epic.getTaskId(), "12.01.2024 12:00", 150);
+                status, epic.getTaskId(), "12.01.2024 15:00", 150);
         manager.createSubTask(testSub);
 
         return testSub;
@@ -330,7 +534,7 @@ public abstract class TasksManagerTest <T extends TaskManager> {
 
     public SubTask updateTestSub(SubTask task) {
         SubTask newSub = new SubTask("New test Sub name", "New test Sub description",
-                task.getTaskStatus(), task.getEpicId(), "12.01.2024 12:00", 150);
+                task.getTaskStatus(), task.getEpicId(), "12.01.2024 15:00", 150);
         newSub.setTaskId(task.getTaskId());
 
         return newSub;
@@ -355,321 +559,5 @@ public abstract class TasksManagerTest <T extends TaskManager> {
                 NullPointerException.class,
                 () -> manager.deleteSubById(id)
         );
-    }
-
-    public void generateShouldDeleteAllSubTasks(T manager) {
-        manager.deleteSubTasks();
-
-        for (EpicTask epic : manager.getEpicTasks()) {
-            assertEquals(StatusOfTask.NEW, epic.getTaskStatus());
-            assertTrue(epic.getSubIds().isEmpty());
-        }
-    }
-
-    public void generateShouldGetTaskById(T manager) {
-        // Позитивная проверка
-        assertEquals(getTestTask(), manager.getTask(getTestTask().getTaskId()));
-
-        // Негативные проверки
-        assertNull(manager.getTask(0));
-        assertNull(manager.getTask(4));
-
-        manager.deleteTasks();
-        assertNull(manager.getTask(getTestTask().getTaskId()));
-    }
-
-    public void generateShouldGetEpicTaskById(T manager) {
-        assertEquals(getTestEpic().toString(), manager.getEpic(getTestEpic().getTaskId()).toString());
-        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(getTestEpic().getTaskId()).getTaskStatus());
-
-        assertNull(manager.getEpic(-3));
-        assertNull(manager.getEpic(7));
-
-        manager.deleteEpicTasks();
-        assertNull(manager.getEpic(getTestEpic().getTaskId()));
-    }
-
-    public void generateShouldGetSubTaskById(T manager) {
-        assertEquals(getTestSub().toString(), manager.getSub(getTestSub().getTaskId()).toString());
-        assertEquals(4, manager.getSub(getTestSub().getTaskId()).getEpicId());
-
-        assertNull(manager.getSub(6));
-        assertNull(manager.getSub(+11));
-
-        manager.deleteSubTasks();
-        assertNull(manager.getSub(getTestSub().getTaskId()));
-    }
-
-    public void generateShouldGetSubTasksFromEpic(T manager) {
-        assertEquals(List.of(manager.getSub(7), manager.getSub(8)), manager.getSubFromEpic(4));
-
-        assertTrue(manager.getEpic(6).getSubIds().isEmpty());
-
-        manager.deleteSubTasks();
-        assertTrue(manager.getEpic(4).getSubIds().isEmpty());
-    }
-
-    public void generateShouldCreateTask(T manager) {
-        Task testTask = createTestTask(manager);
-
-        assertEquals(testTask, manager.getTask(testTask.getTaskId()));
-        assertNull(manager.getEpic(testTask.getTaskId()));
-        assertNull(manager.getSub(testTask.getTaskId()));
-    }
-
-    public void generateShouldCreateTaskWithEmptyTasksList(T manager) {
-        manager.deleteTasks();
-        Task testTask = createTestTask(manager);
-
-        assertEquals(testTask, manager.getTask(testTask.getTaskId()));
-        assertNull(manager.getEpic(testTask.getTaskId()));
-        assertNull(manager.getSub(testTask.getTaskId()));
-    }
-
-    public void generateShouldCreateEpicTask(T manager) {
-        EpicTask testEpic = createTestEpic(manager);
-        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
-
-        assertEquals(testEpic, manager.getEpic(testEpic.getTaskId()));
-        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
-
-        assertNull(manager.getTask(testEpic.getTaskId()));
-        assertNull(manager.getSub(testEpic.getTaskId()));
-    }
-
-    public void generateShouldCreateEpicTaskWithEmptyEpicsList(T manager) {
-        manager.deleteEpicTasks();
-        EpicTask testEpic = createTestEpic(manager);
-        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
-
-        assertEquals(testEpic, manager.getEpic(testEpic.getTaskId()));
-        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
-
-        assertNull(manager.getTask(testEpic.getTaskId()));
-        assertNull(manager.getSub(testEpic.getTaskId()));
-    }
-
-    public void shouldCreateSubTask(T manager) {
-        EpicTask testEpic = createTestEpic(manager);
-        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
-
-        assertEquals(testSub, manager.getSub(testSub.getTaskId()));
-        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
-
-        assertNull(manager.getTask(testSub.getTaskId()));
-        assertNull(manager.getEpic(testSub.getTaskId()));
-    }
-
-    public void generateShouldCreateSubTaskWithEmptySubsList(T manager) {
-        manager.deleteSubTasks();
-        EpicTask testEpic = createTestEpic(manager);
-        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
-
-        assertEquals(testSub, manager.getSub(testSub.getTaskId()));
-        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
-
-        assertNull(manager.getTask(testSub.getTaskId()));
-        assertNull(manager.getEpic(testSub.getTaskId()));
-    }
-
-    public void generateShouldUpdateTask(T manager) {
-        Task testTask = createTestTask(manager);
-        assertEquals(testTask, manager.getTask(testTask.getTaskId()));
-
-        Task updTask = updateTestTask(testTask);
-        manager.updateTask(updTask);
-
-        assertEquals(updTask, manager.getTask(updTask.getTaskId()));
-        assertNotEquals(testTask, manager.getTask(updTask.getTaskId()));
-    }
-
-
-    public void generateShouldUpdateTaskWithEmptyTasksList(T manager) {
-        manager.deleteTasks();
-        Task testTask = createTestTask(manager);
-        assertEquals(testTask, manager.getTask(testTask.getTaskId()));
-        assertEquals(1, manager.getTasks().size());
-
-        Task updTask = updateTestTask(testTask);
-        manager.updateTask(updTask);
-
-        assertEquals(updTask, manager.getTask(updTask.getTaskId()));
-        assertNotEquals(testTask, manager.getTask(updTask.getTaskId()));
-        assertEquals(1, manager.getTasks().size());
-    }
-
-    public void generateShouldUpdateEpicTask(T manager) {
-        EpicTask testEpic = createTestEpic(manager);
-        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
-        assertEquals(testEpic, manager.getEpic(testEpic.getTaskId()));
-        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
-
-        EpicTask updEpic = updateTestEpic(testEpic);
-        manager.updateEpicTask(updEpic);
-        assertEquals(updEpic, manager.getEpic(updEpic.getTaskId()));
-        assertNotEquals(testEpic, manager.getEpic(updEpic.getTaskId()));
-        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
-    }
-
-    public void generateShouldUpdateEpicTaskWithEmptyEpicsList(T manager) {
-        manager.deleteEpicTasks();
-        EpicTask testEpic = createTestEpic(manager);
-        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
-        assertEquals(testEpic, manager.getEpic(testEpic.getTaskId()));
-        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
-        assertEquals(1, manager.getEpicTasks().size());
-
-        EpicTask updEpic = updateTestEpic(testEpic);
-        manager.updateEpicTask(updEpic);
-        assertEquals(updEpic, manager.getEpic(updEpic.getTaskId()));
-        assertNotEquals(testEpic, manager.getEpic(updEpic.getTaskId()));
-        assertEquals(StatusOfTask.IN_PROGRESS, manager.getEpic(testEpic.getTaskId()).getTaskStatus());
-        assertEquals(1, manager.getEpicTasks().size());
-    }
-
-    public void generateShouldUpdateSubTask(T manager) {
-        EpicTask testEpic = createTestEpic(manager);
-        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
-        assertEquals(testSub, manager.getSub(testSub.getTaskId()));
-        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
-
-        SubTask updSub = updateTestSub(testSub);
-        manager.updateSubTask(updSub);
-        assertEquals(updSub, manager.getSub(updSub.getTaskId()));
-        assertNotEquals(testSub, manager.getSub(updSub.getTaskId()));
-        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
-    }
-
-    public void generateShouldUpdateSubTaskWithEmptySubsList(T manager) {
-        manager.deleteSubTasks();
-        EpicTask testEpic = createTestEpic(manager);
-        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
-        assertEquals(testSub, manager.getSub(testSub.getTaskId()));
-        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
-        assertEquals(1, manager.getSubTasks().size());
-
-
-        SubTask updSub = updateTestSub(testSub);
-        manager.updateSubTask(updSub);
-        assertEquals(updSub, manager.getSub(updSub.getTaskId()));
-        assertNotEquals(testSub, manager.getSub(updSub.getTaskId()));
-        assertEquals(testEpic.getTaskId(), manager.getSub(testSub.getTaskId()).getEpicId());
-        assertEquals(1, manager.getSubTasks().size());
-    }
-
-    public void generateShouldDeleteTaskById(T manager) {
-        Task testTask = createTestTask(manager);
-        int sizeBefore = manager.getTasks().size();
-        manager.deleteTaskById(testTask.getTaskId());
-
-        assertEquals(sizeBefore - 1, manager.getTasks().size());
-        assertNull(manager.getTask(testTask.getTaskId()));
-    }
-
-    public void generateShouldDeleteTaskByIdWithEmptyTasksList(T manager) {
-        manager.deleteTasks();
-
-        Task testTask = createTestTask(manager);
-        int sizeBefore = manager.getTasks().size();
-        manager.deleteTaskById(testTask.getTaskId());
-
-        assertEquals(sizeBefore - 1, manager.getTasks().size());
-        assertNull(manager.getTask(testTask.getTaskId()));
-    }
-
-    public void generateShouldNotDeleteTaskByWrongId(T manager) {
-        Task testTask = createTestTask(manager);
-        int sizeBefore = manager.getTasks().size();
-
-        assertEquals(NullPointerException.class, executeDeleteTask(manager, 0).getClass());
-        assertEquals(NullPointerException.class, executeDeleteTask(manager, -1).getClass());
-        assertEquals(NullPointerException.class, executeDeleteTask(manager, 9999).getClass());
-
-        assertEquals(sizeBefore, manager.getTasks().size());
-        assertNotNull(manager.getTask(testTask.getTaskId()));
-    }
-
-    public void generateShouldDeleteEpicTaskById(T manager) {
-        EpicTask testEpic = createTestEpic(manager);
-        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
-        int sizeBefore = manager.getEpicTasks().size();
-        manager.deleteEpicById(testEpic.getTaskId());
-
-        assertEquals(sizeBefore - 1, manager.getEpicTasks().size());
-        assertNull(manager.getEpic(testEpic.getTaskId()));
-    }
-
-    public void generateShouldDeleteEpicTaskByIdWithEmptyEpicsList(T manager) {
-        manager.deleteEpicTasks();
-
-        EpicTask testEpic = createTestEpic(manager);
-        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
-        int sizeBefore = manager.getEpicTasks().size();
-        manager.deleteEpicById(testEpic.getTaskId());
-
-        assertEquals(sizeBefore - 1, manager.getEpicTasks().size());
-        assertNull(manager.getEpic(testEpic.getTaskId()));
-    }
-
-    public void generateShouldNotDeleteEpicByWrongId(T manager) {
-        EpicTask testEpic = createTestEpic(manager);
-        createTestSub(manager, testEpic, StatusOfTask.IN_PROGRESS);
-        int sizeBefore = manager.getEpicTasks().size();
-
-        assertEquals(NullPointerException.class, executeDeleteEpic(manager, 0).getClass());
-        assertEquals(NullPointerException.class, executeDeleteEpic(manager, -1).getClass());
-        assertEquals(NullPointerException.class, executeDeleteEpic(manager, 9999).getClass());
-
-        assertEquals(sizeBefore, manager.getEpicTasks().size());
-        assertNotNull(manager.getEpic(testEpic.getTaskId()));
-    }
-
-    public void generateShouldDeleteSubTaskById(T manager) {
-        EpicTask testEpic = createTestEpic(manager);
-        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
-        int sizeBefore = manager.getSubTasks().size();
-        manager.deleteSubById(testSub.getTaskId());
-
-        assertEquals(sizeBefore - 1, manager.getSubTasks().size());
-        assertNull(manager.getSub(testSub.getTaskId()));
-    }
-
-    public void generateShouldDeleteSubTaskByIdWithEmptySubsList(T manager) {
-        manager.deleteSubTasks();
-
-        EpicTask testEpic = createTestEpic(manager);
-        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
-        int sizeBefore = manager.getSubTasks().size();
-        manager.deleteSubById(testSub.getTaskId());
-
-        assertEquals(sizeBefore - 1, manager.getSubTasks().size());
-        assertNull(manager.getSub(testSub.getTaskId()));
-    }
-
-    public void generateShouldNotDeleteSubByWrongId(T manager) {
-        EpicTask testEpic = createTestEpic(manager);
-        SubTask testSub = createTestSub(manager, testEpic, StatusOfTask.DONE);
-        int sizeBefore = manager.getSubTasks().size();
-
-        assertEquals(NullPointerException.class, executeDeleteSub(manager, 0).getClass());
-        assertEquals(NullPointerException.class, executeDeleteSub(manager, -1).getClass());
-        assertEquals(NullPointerException.class, executeDeleteSub(manager, 9999).getClass());
-
-        assertEquals(sizeBefore, manager.getSubTasks().size());
-        assertNotNull(manager.getSub(testSub.getTaskId()));
-    }
-
-    public void generateShouldNotCreateTasksWhenTimeIsBusy(T manager) {
-        manager.deleteTasks();
-        manager.deleteEpicTasks();
-        manager.deleteSubTasks();
-
-        Task testTask = createTestTask(manager);
-
-        assertEquals(testTask, manager.getTask(testTask.getTaskId()));
-        assertNull(manager.getEpic(testTask.getTaskId()));
-        assertNull(manager.getSub(testTask.getTaskId()));
-
-        createTestTask(manager);
     }
 }

@@ -56,18 +56,15 @@ public class Main {
         System.out.println(manager.getHistory());
 
         // Удаление задач
-        System.out.println("Удаляем задачу с id = 1");
-        manager.deleteTaskById(1);
+        System.out.println("Удаляем задачу с id = " + manager.deleteTaskById(1));
         System.out.println("Текущая история просмотров всех задач: ");
         System.out.println(manager.getHistory());
 
-        System.out.println("Удаляем подзадачу с id = 5");
-        manager.deleteSubById(5);
+        System.out.println("Удаляем подзадачу с id = " +  manager.deleteSubById(5));
         System.out.println("Текущая история просмотров всех задач: ");
         System.out.println(manager.getHistory());
 
-        System.out.println("Удаляем эпик с id = 4");
-        manager.deleteEpicById(4);
+        System.out.println("Удаляем эпик с id = " + manager.deleteEpicById(4));
         System.out.println("Текущая история просмотров всех задач: ");
         System.out.println(manager.getHistory());
     }

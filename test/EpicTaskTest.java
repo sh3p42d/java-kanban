@@ -58,7 +58,6 @@ class EpicTaskTest {
         createSubWithStatus(StatusOfTask.IN_PROGRESS);
         createSubWithStatus(StatusOfTask.DONE);
 
-        System.out.println(manager.getSubTasks());
         assertEquals(epic.getTaskStatus(), StatusOfTask.IN_PROGRESS);
     }
 

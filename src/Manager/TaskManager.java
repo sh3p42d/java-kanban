@@ -5,14 +5,9 @@ import Tasks.SubTask;
 import Tasks.Task;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public interface TaskManager {
-    Map<Integer, Task> getTaskMap();
-    Map<Integer, EpicTask> getEpicMap();
-    Map<Integer, SubTask> getSubMap();
-
     // Получение списка задач каждого типа
     List<Task> getTasks();
     List<EpicTask> getEpicTasks();

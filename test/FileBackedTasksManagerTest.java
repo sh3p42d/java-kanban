@@ -34,7 +34,7 @@ class FileBackedTasksManagerTest extends TasksManagerTest<FileBackedTasksManager
         assertTrue(manager.getTasks().isEmpty());
         assertTrue(manager.getEpicTasks().isEmpty());
         assertTrue(manager.getSubTasks().isEmpty());
-        assertTrue(manager.getManagerHistory().getHistory().isEmpty());
+        assertTrue(manager.getHistory().isEmpty());
 
         String content = new String(Files.readAllBytes(Paths.get(filePath)));
         assertEquals(firstStringOfCsv, content);
@@ -65,7 +65,7 @@ class FileBackedTasksManagerTest extends TasksManagerTest<FileBackedTasksManager
         assertTrue(manager.getTasks().isEmpty());
         assertEquals(1, manager.getEpicTasks().size());
         assertTrue(manager.getSubTasks().isEmpty());
-        assertTrue(manager.getManagerHistory().getHistory().isEmpty());
+        assertTrue(manager.getHistory().isEmpty());
 
         String content = new String(Files.readAllBytes(Paths.get(filePath)));
         assertEquals(firstStringOfCsv + onlyTestEpic, content);
@@ -94,7 +94,7 @@ class FileBackedTasksManagerTest extends TasksManagerTest<FileBackedTasksManager
         assertTrue(manager.getTasks().isEmpty());
         assertTrue(manager.getEpicTasks().isEmpty());
         assertTrue(manager.getSubTasks().isEmpty());
-        assertTrue(manager.getManagerHistory().getHistory().isEmpty());
+        assertTrue(manager.getHistory().isEmpty());
     }
 
     @Test
@@ -127,6 +127,6 @@ class FileBackedTasksManagerTest extends TasksManagerTest<FileBackedTasksManager
         assertEquals(3, manager.getTasks().size());
         assertEquals(3, manager.getEpicTasks().size());
         assertEquals(4, manager.getSubTasks().size());
-        assertTrue(manager.getManagerHistory().getHistory().isEmpty());
+        assertTrue(manager.getHistory().isEmpty());
     }
 }

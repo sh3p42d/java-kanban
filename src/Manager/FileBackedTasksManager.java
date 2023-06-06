@@ -23,7 +23,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     private void save() {
         Path filePath = Path.of(path);
         Map<Integer, Task> allMap = allMapMerge();
-        String history = historyToString(super.getManagerHistory());
+        String history = historyToString(getHistory());
         String fileHead = "id,type,name,status,description,start,duration,epic\n";
 
         try (BufferedWriter bw = Files.newBufferedWriter(filePath)) {
@@ -54,10 +54,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         return allMap;
     }
 
-    private static String historyToString(HistoryManager manager) {
+    private static String historyToString(List<Task> taskList) {
         StringBuilder history = new StringBuilder();
 
-        List<Task> taskList = manager.getHistory();
         if (!taskList.isEmpty()) {
             for (Task task : taskList) {
                 history.append(task.getTaskId()).append(",");
