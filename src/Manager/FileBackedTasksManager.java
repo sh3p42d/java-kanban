@@ -20,7 +20,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     }
 
     // Сохранение задач и истории в файл
-    private void save() {
+    protected void save() {
         Path filePath = Path.of(path);
         Map<Integer, Task> allMap = allMapMerge();
         String history = historyToString(getHistory());
@@ -46,7 +46,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         }
     }
 
-    private Map<Integer, Task> allMapMerge() {
+    protected Map<Integer, Task> allMapMerge() {
         // Собираем Map'ы из родителя
         Map<Integer, Task> allMap = new HashMap<>(super.getTaskMap());
         allMap.putAll(super.getEpicMap());
@@ -54,7 +54,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         return allMap;
     }
 
-    private static String historyToString(List<Task> taskList) {
+    protected static String historyToString(List<Task> taskList) {
         StringBuilder history = new StringBuilder();
 
         if (!taskList.isEmpty()) {
@@ -124,27 +124,18 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             // Записываем задачи в нужные Map'ы
             for (int i = 1; i <= (taskList.size() - historyLine); i++) {
                 String taskType = taskList.get(i).split(",")[1];
-                Integer taskId = Integer.valueOf(taskList.get(i).split(",")[0]);
-
-                // Устанавливаем NextId для super'а, это исключает перезапись задач,
-                // в случае если мы продолжим работу менеджера после загрузки файла
-                if (taskId >= manager.getNextId()) {
-                    manager.setNextId(taskId + 1);
-                }
+                int taskId = Integer.parseInt(taskList.get(i).split(",")[0]);
 
                 if (taskType.equals(TasksType.TASK.toString())) {
-                    manager.taskMap.put(taskId, fromStringTask(taskList.get(i)));
+                    manager.setNextId(taskId);
+                    manager.createTask(fromStringTask(taskList.get(i)));
                 } else if (taskType.equals(TasksType.EPIC.toString())) {
-                    manager.epicMap.put(taskId, fromStringEpic(taskList.get(i)));
+                    manager.setNextId(taskId);
+                    manager.createEpicTask(fromStringEpic(taskList.get(i)));
                 } else {
-                    manager.subMap.put(taskId, fromStringSub(taskList.get(i)));
+                    manager.setNextId(taskId);
+                    manager.createSubTask(fromStringSub(taskList.get(i)));
                 }
-            }
-
-            // Добавляем подзадачи в эпики
-            for (SubTask subTask : manager.subMap.values()) {
-                EpicTask epic = manager.epicMap.get(subTask.getEpicId());
-                epic.addSub(subTask.getTaskId());
             }
 
             // Считываем историю из файла в менеджера истории
@@ -153,12 +144,12 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
                 for (Integer taskIdHistory : newHistory) {
                     Task historyTask;
-                    if (manager.taskMap.containsKey(taskIdHistory)) {
-                        historyTask = manager.taskMap.get(taskIdHistory);
-                    } else if (manager.epicMap.containsKey(taskIdHistory)) {
-                        historyTask = manager.epicMap.get(taskIdHistory);
+                    if (manager.getTaskMap().containsKey(taskIdHistory)) {
+                        historyTask = manager.getTask(taskIdHistory);
+                    } else if (manager.getEpicMap().containsKey(taskIdHistory)) {
+                        historyTask = manager.getEpic(taskIdHistory);
                     } else {
-                        historyTask = manager.subMap.get(taskIdHistory);
+                        historyTask = manager.getSub(taskIdHistory);
                     }
                     newManagerHistory.add(historyTask);
                 }
@@ -228,7 +219,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         return status;
     }
 
-    private static List<Integer> historyFromString(String value) {
+    protected static List<Integer> historyFromString(String value) {
         List<Integer> historyList = new ArrayList<>();
         String[] historyString = value.split(",");
         for (String s : historyString) {

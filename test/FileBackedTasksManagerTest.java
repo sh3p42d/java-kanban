@@ -28,6 +28,7 @@ class FileBackedTasksManagerTest extends TasksManagerTest<FileBackedTasksManager
     // Работа с файлом
     @Test
     public void shouldNotGetAnything() throws IOException {
+        createAllTestTask(manager);
         manager = (FileBackedTasksManager) Managers.getDefaultFileManager(filePath);
         manager.deleteTasks(); // вызываем метод save()
 

@@ -527,7 +527,6 @@ public abstract class TasksManagerTest <T extends TaskManager> {
         newEpic.setTaskStatus(task.getTaskStatus());
         newEpic.setStartTime(task.getStartTime());
         newEpic.setDuration(task.getDuration());
-        newEpic.setEndTime();
 
         return newEpic;
     }

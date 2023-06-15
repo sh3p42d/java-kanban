@@ -1,13 +1,17 @@
-import Manager.InMemoryTaskManager;
-import Manager.Managers;
+import Manager.*;
 import Tasks.EpicTask;
 import Tasks.StatusOfTask;
 import Tasks.SubTask;
 import Tasks.Task;
 
+import java.io.IOException;
+
+import static Manager.HttpTaskManager.loadFromClient;
+
 public class Main {
-    public static void main(String[] args) {
-        InMemoryTaskManager manager = (InMemoryTaskManager) Managers.getDefault();
+    public static void main(String[] args) throws IOException {
+        new KVServer().start();
+        HttpTaskManager manager = (HttpTaskManager) Managers.getDefaultHttpManager("http://localhost:8078");
 
         Task task1 = new Task("First Simple", "First description", StatusOfTask.NEW);
         Task task2 = new Task("Second Simple", "Second description", StatusOfTask.DONE);
@@ -35,16 +39,12 @@ public class Main {
         manager.getTask(2);
         manager.getTask(1);
         manager.getTask(1);
-        System.out.println("Текущая история просмотров задач: ");
-        System.out.println(manager.getHistory());
 
         System.out.println("Посмотрим на эпики");
         manager.getEpic(3);
         manager.getEpic(3);
         manager.getEpic(4);
         manager.getEpic(4);
-        System.out.println("Текущая история просмотров задач и эпиков: ");
-        System.out.println(manager.getHistory());
 
         System.out.println("Посмотрим на подзадачи");
         manager.getSub(5);
@@ -52,20 +52,25 @@ public class Main {
         manager.getSub(6);
         manager.getSub(7);
         manager.getSub(6);
-        System.out.println("Текущая история просмотров всех задач: ");
-        System.out.println(manager.getHistory());
 
         // Удаление задач
         System.out.println("Удаляем задачу с id = " + manager.deleteTaskById(1));
-        System.out.println("Текущая история просмотров всех задач: ");
-        System.out.println(manager.getHistory());
-
         System.out.println("Удаляем подзадачу с id = " +  manager.deleteSubById(5));
-        System.out.println("Текущая история просмотров всех задач: ");
+        System.out.println("Удаляем эпик с id = " + manager.deleteEpicById(4));
+
+        System.out.println(manager.getTasks());
+        System.out.println(manager.getEpicTasks());
+        System.out.println(manager.getSubTasks());
         System.out.println(manager.getHistory());
 
-        System.out.println("Удаляем эпик с id = " + manager.deleteEpicById(4));
-        System.out.println("Текущая история просмотров всех задач: ");
+        manager = loadFromClient("http://localhost:8078");
+        manager.createTask(task1);
+        manager.createTask(task2);
+        manager.createEpicTask(epicTask1);
+
+        System.out.println(manager.getTasks());
+        System.out.println(manager.getEpicTasks());
+        System.out.println(manager.getSubTasks());
         System.out.println(manager.getHistory());
     }
 }

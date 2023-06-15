@@ -1,18 +1,12 @@
 package Tasks;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class EpicTask extends Task {
     private ArrayList<Integer> subIds = new ArrayList<>(); // ID всех подзадач из эпика
-    private LocalDateTime endTime;
 
     public EpicTask(String taskName, String taskDescription) {
         super(taskName, taskDescription, StatusOfTask.NEW);
-    }
-
-    public void setEndTime() {
-        this.endTime = getStartTime().plusMinutes(getDuration().toMinutes());
     }
 
     public void setSubIds(ArrayList<Integer> subIds) {

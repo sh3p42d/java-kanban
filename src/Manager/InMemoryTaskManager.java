@@ -21,7 +21,7 @@ public class InMemoryTaskManager implements TaskManager {
     private boolean checkTimeBusy(Task task) {
         boolean busy = true;
 
-        if (task.getStartTime() == null || prioritizedTasks.isEmpty()) {
+        if (task.getStartTime() == null || getPrioritizedTasks().isEmpty()) {
             return false;
         }
 
@@ -43,7 +43,6 @@ public class InMemoryTaskManager implements TaskManager {
             } else if (Objects.equals(setTaskStart, taskStart) &&
                     Objects.equals(setTaskEnd, taskEnd) &&
                     setTask.getTaskId() == task.getTaskId()) {
-
                 busy = false;
                 break;
             } else {
@@ -326,7 +325,6 @@ public class InMemoryTaskManager implements TaskManager {
                                 .mapToLong(Duration::toMinutes)
                                 .sum()
                 ));
-                epic.setEndTime();
             }
         } catch (NullPointerException e) {
             System.out.println("Ошибка добавления времени в эпик");
