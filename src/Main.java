@@ -11,7 +11,7 @@ import static Manager.HttpTaskManager.loadFromClient;
 public class Main {
     public static void main(String[] args) throws IOException {
         new KVServer().start();
-        HttpTaskManager manager = (HttpTaskManager) Managers.getDefaultHttpManager("http://localhost:8078");
+        HttpTaskManager manager = (HttpTaskManager) Managers.getDefault("http://localhost:8078");
 
         Task task1 = new Task("First Simple", "First description", StatusOfTask.NEW);
         Task task2 = new Task("Second Simple", "Second description", StatusOfTask.DONE);

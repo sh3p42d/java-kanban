@@ -9,8 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EpicTaskTest {
-
-    private InMemoryTaskManager manager = (InMemoryTaskManager) Managers.getDefault();
+    private InMemoryTaskManager manager = (InMemoryTaskManager) Managers.getDefaultMemoryManager();
     private final EpicTask epic = new EpicTask("Test epic", "Special epicTask for test");
 
     // Упрощаем создание подзадач с разными статусами
@@ -22,7 +21,7 @@ class EpicTaskTest {
 
     @BeforeEach
     public void beforeEach() {
-        manager = (InMemoryTaskManager) Managers.getDefault();
+        manager = (InMemoryTaskManager) Managers.getDefaultMemoryManager();
         manager.createEpicTask(epic);
     }
 

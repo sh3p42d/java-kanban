@@ -1,13 +1,1 @@
 id,type,name,status,description,start,duration,epic
-1,TASK,First Simple New,NEW,task id = 1,12.02.2024 12:00,150
-2,TASK,Second Simple In progress,IN_PROGRESS,task id = 2,12.03.2024 12:00,150
-3,TASK,Third Simple done,DONE,task id = 3,12.04.2024 12:00,150
-4,EPIC,First Epic,IN_PROGRESS,epic id = 4,10.01.2024 12:00,300
-5,EPIC,Second Epic,IN_PROGRESS,epic id = 5,13.01.2024 12:00,150
-6,EPIC,Third Epic,NEW,epic id = 6
-7,SUBTASK,First Sub,NEW,sub id = 7,10.01.2024 12:00,150,4
-8,SUBTASK,Second Sub,IN_PROGRESS,sub id = 8,11.01.2024 12:00,150,4
-9,SUBTASK,Third Sub,DONE,sub id = 9,5
-10,SUBTASK,Fourth Sub,NEW,sub id = 10,13.01.2024 12:00,150,5
-
-1,2,3,4,5,6,7,8,9,10

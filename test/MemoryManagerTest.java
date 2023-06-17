@@ -8,7 +8,7 @@ class MemoryManagerTest extends TasksManagerTest<InMemoryTaskManager> {
 
     @BeforeEach
     public void beforeEachInit() {
-        manager = (InMemoryTaskManager) Managers.getDefault();
+        manager = (InMemoryTaskManager) Managers.getDefaultMemoryManager();
         createAllTestTask(manager);
         getHistoryAllTestTask(manager);
     }

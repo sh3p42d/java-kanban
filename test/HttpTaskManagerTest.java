@@ -50,31 +50,57 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     private HttpServer httpServer;
 
     @BeforeEach
-    public void beforeEachInit() throws IOException {
-        kvServer = new KVServer();
-        kvServer.start();
-        client = new KVTaskClient(kvServerUrl);
+    public void beforeEachInit() {
+        try {
+            kvServer = new KVServer();
+            kvServer.start();
+        } catch (IOException e) {
+            System.out.println("Сервер ключ-значение не удалось запустить. \n" +
+                    "Проверьте доступность " + kvServerUrl);
+            e.printStackTrace();
+        }
 
-        manager = (HttpTaskManager) Managers.getDefaultHttpManager(kvServerUrl);
+        client = new KVTaskClient(kvServerUrl);
+        manager = (HttpTaskManager) Managers.getDefault(kvServerUrl);
+
         createAllTestTask(manager);
         getHistoryAllTestTask(manager);
 
-        httpServer = HttpServer.create();
-        httpServer.bind(new InetSocketAddress(PORT), 0);
-        httpServer.createContext("/tasks", new TaskHandler());
-        httpServer.start();
+        try {
+            httpServer = HttpServer.create();
+            httpServer.bind(new InetSocketAddress(PORT), 0);
+            httpServer.createContext("/tasks", new TaskHandler());
+            httpServer.start();
+        } catch (IOException e) {
+            System.out.println("Сервер маппинга не удалось запустить");
+            e.printStackTrace();
+        }
+
     }
 
     @AfterEach
     public void afterEachInit() {
-        kvServer.stop();
-        httpServer.stop(1);
+        try {
+            kvServer.stop();
+        } catch (NullPointerException e) {
+            System.out.println("Сервер ключ-значение по адресу " + kvServerUrl + " не был запущен " +
+                    "и поэтому не может быть остановлен");
+            e.printStackTrace();
+        }
+
+        try {
+            httpServer.stop(1);
+        } catch (NullPointerException e) {
+            System.out.println("Сервер маппинга по адресу " + httpServerUrl + " не был запущен " +
+                    "и поэтому не может быть остановлен");
+            e.printStackTrace();
+        }
     }
 
     // Работа с файлом
     @Test
     public void shouldNotGetAnything() {
-        manager = (HttpTaskManager) Managers.getDefaultHttpManager(kvServerUrl);
+        manager = (HttpTaskManager) Managers.getDefault(kvServerUrl);
         manager.deleteTasks(); // вызываем метод save()
 
         assertTrue(manager.getTasks().isEmpty());
@@ -90,7 +116,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
 
     @Test
     public void shouldGetEpicWithoutSubsWithHistory() {
-        manager = (HttpTaskManager) Managers.getDefaultHttpManager(kvServerUrl);
+        manager = (HttpTaskManager) Managers.getDefault(kvServerUrl);
         EpicTask testEpic = createTestEpic(manager);
         manager.getEpic(testEpic.getTaskId());
         manager.deleteSubTasks();
@@ -108,7 +134,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
 
     @Test
     public void shouldGetEpicWithoutSubsWithoutHistory() {
-        manager = (HttpTaskManager) Managers.getDefaultHttpManager(kvServerUrl);
+        manager = (HttpTaskManager) Managers.getDefault(kvServerUrl);
         createTestEpic(manager);
         manager.deleteSubTasks();
 
@@ -124,7 +150,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
 
     @Test
     public void shouldLoadFromServer() {
-        manager = (HttpTaskManager) Managers.getDefaultHttpManager(kvServerUrl);
+        manager = (HttpTaskManager) Managers.getDefault(kvServerUrl);
         manager = loadFromClient(kvServerUrl);
 
         assertEquals(3, manager.getTasks().size());
@@ -139,7 +165,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
         manager.deleteEpicTasks();
         manager.deleteSubTasks();
 
-        manager = (HttpTaskManager) Managers.getDefaultHttpManager(kvServerUrl);
+        manager = (HttpTaskManager) Managers.getDefault(kvServerUrl);
         manager = loadFromClient(kvServerUrl);
 
         assertTrue(manager.getTasks().isEmpty());
@@ -154,7 +180,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
         manager.deleteEpicTasks();
         manager.deleteSubTasks();
 
-        manager = (HttpTaskManager) Managers.getDefaultHttpManager(kvServerUrl);
+        manager = (HttpTaskManager) Managers.getDefault(kvServerUrl);
         EpicTask testEpic = createTestEpic(manager);
         manager.getEpic(testEpic.getTaskId());
         manager.deleteSubTasks();
@@ -173,7 +199,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     @Test
     public void shouldLoadFromServerWithoutHistory() {
         manager.clearHistory();
-        manager = (HttpTaskManager) Managers.getDefaultHttpManager(kvServerUrl);
+        manager = (HttpTaskManager) Managers.getDefault(kvServerUrl);
         manager = loadFromClient(kvServerUrl);
 
         assertEquals(3, manager.getTasks().size());
@@ -183,7 +209,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldGetTasks() throws IOException, InterruptedException {
+    public void shouldGetTasks() {
         String serverAllTasks = sendGetToServer("/tasks/task");
         assertEquals(gsonTaskServer.toJson(manager.getTasks()), serverAllTasks);
 
@@ -193,7 +219,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldNotGetTasks() throws IOException, InterruptedException {
+    public void shouldNotGetTasks() {
         int taskId = 1000;
         String serverOneTask = sendGetToServer("/tasks/task/?id=" + taskId);
         assertEquals("Task с id=" + taskId + " не существует", serverOneTask);
@@ -203,7 +229,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldGetEpics() throws IOException, InterruptedException {
+    public void shouldGetEpics() {
         String serverAllEpics = sendGetToServer("/tasks/epic");
         assertEquals(gsonTaskServer.toJson(manager.getEpicTasks()), serverAllEpics);
 
@@ -213,7 +239,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldNotGetEpics() throws IOException, InterruptedException {
+    public void shouldNotGetEpics() {
         int epicId = 1000;
         String serverOneEpic = sendGetToServer("/tasks/epic/?id=" + epicId);
         assertEquals("Epic с id=" + epicId + " не существует", serverOneEpic);
@@ -223,7 +249,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldGetSubs() throws IOException, InterruptedException {
+    public void shouldGetSubs() {
         String serverAllSubs = sendGetToServer("/tasks/sub");
         assertEquals(gsonTaskServer.toJson(manager.getSubTasks()), serverAllSubs);
 
@@ -233,7 +259,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldNotGetSubs() throws IOException, InterruptedException {
+    public void shouldNotGetSubs() {
         int subId = 1000;
         String serverOneSub = sendGetToServer("/tasks/sub/?id=" + subId);
         assertEquals("Sub с id=" + subId + " не существует", serverOneSub);
@@ -243,7 +269,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldGetPriority() throws IOException, InterruptedException {
+    public void shouldGetPriority() {
         String serverAllSubs = sendGetToServer("/tasks/priority");
         assertEquals(gsonTaskServer.toJson(manager.getPrioritizedTasks()), serverAllSubs);
 
@@ -252,7 +278,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldGetHistory() throws IOException, InterruptedException {
+    public void shouldGetHistory() {
         String serverAllSubs = sendGetToServer("/tasks/history");
         assertEquals(gsonTaskServer.toJson(manager.getHistory()), serverAllSubs);
 
@@ -261,7 +287,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldPostTask() throws IOException, InterruptedException {
+    public void shouldPostTask() {
         Task task = manager.getTask(1);
         task.setTaskName("qwe123");
         String serverOneTask = sendPostToServer("/tasks/task", gsonTaskServer.toJson(task));
@@ -275,7 +301,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldNotPostTask() throws IOException, InterruptedException {
+    public void shouldNotPostTask() {
         Task task = manager.getTask(1);
         task.setTaskName("");
         String serverOneTask = sendPostToServer("/tasks/task", gsonTaskServer.toJson(task));
@@ -299,7 +325,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldPostEpic() throws IOException, InterruptedException {
+    public void shouldPostEpic() {
         EpicTask epic = manager.getEpic(6);
         epic.setTaskName("qwe123");
         String serverOneTask = sendPostToServer("/tasks/epic", gsonTaskServer.toJson(epic));
@@ -311,7 +337,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldNotPostEpic() throws IOException, InterruptedException {
+    public void shouldNotPostEpic() {
         EpicTask epic = manager.getEpic(6);
         epic.setTaskName("");
         String serverOneTask = sendPostToServer("/tasks/epic", gsonTaskServer.toJson(epic));
@@ -325,7 +351,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldPostSub() throws IOException, InterruptedException {
+    public void shouldPostSub() {
         SubTask sub = manager.getSub(7);
         sub.setTaskName("qwe123");
         String serverOneTask = sendPostToServer("/tasks/sub", gsonTaskServer.toJson(sub));
@@ -338,7 +364,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldNotPostSub() throws IOException, InterruptedException {
+    public void shouldNotPostSub() {
         SubTask sub = manager.getSub(7);
         sub.setTaskName("");
         String serverOneTask = sendPostToServer("/tasks/sub", gsonTaskServer.toJson(sub));
@@ -362,7 +388,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldDeleteTasks() throws IOException, InterruptedException {
+    public void shouldDeleteTasks() {
         int taskId = 1;
         String serverOneTask = sendDeleteToServer("/tasks/task/?id=" + taskId);
         assertEquals("Task задача с id = " + taskId + " удалена", serverOneTask);
@@ -372,7 +398,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldNotDeleteTasks() throws IOException, InterruptedException {
+    public void shouldNotDeleteTasks() {
         int taskId = 1000;
         String serverOneTask = sendDeleteToServer("/tasks/task/?id=" + taskId);
         assertEquals("Task c id=" + taskId + " не существует", serverOneTask);
@@ -382,7 +408,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldDeleteEpics() throws IOException, InterruptedException {
+    public void shouldDeleteEpics() {
         int epicId = 4;
         String serverOneEpic = sendDeleteToServer("/tasks/epic/?id=" + epicId);
         assertEquals("Epic задача с id = " + epicId + " удалена", serverOneEpic);
@@ -392,7 +418,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldNotDeleteEpics() throws IOException, InterruptedException {
+    public void shouldNotDeleteEpics() {
         int epicId = 1000;
         String serverOneEpic = sendDeleteToServer("/tasks/epic/?id=" + epicId);
         assertEquals("Epic c id=" + epicId + " не существует", serverOneEpic);
@@ -402,7 +428,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldDeleteSubs() throws IOException, InterruptedException {
+    public void shouldDeleteSubs() {
         int subId = 7;
         String serverOneSub = sendDeleteToServer("/tasks/sub/?id=" + subId);
         assertEquals("Sub задача с id = " + subId + " удалена", serverOneSub);
@@ -412,7 +438,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldNotDeleteSubs() throws IOException, InterruptedException {
+    public void shouldNotDeleteSubs() {
         int subId = 1000;
         String serverOneSub = sendDeleteToServer("/tasks/sub/?id=" + subId);
         assertEquals("Sub c id=" + subId + " не существует", serverOneSub);
@@ -422,7 +448,7 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldDeleteHistory() throws IOException, InterruptedException {
+    public void shouldDeleteHistory() {
         String serverAllSubs = sendDeleteToServer("/tasks/history");
         assertEquals("Вся история просмотров удалена", serverAllSubs);
 
@@ -431,8 +457,8 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
     }
 
     @Test
-    public void shouldReturnUnknown() throws IOException, InterruptedException {
-        String serverAllSubs = sendUnknownToServer("/tasks/task");
+    public void shouldReturnUnknown() {
+        String serverAllSubs = sendUnknownToServer();
         assertEquals("Такого эндпоинта не существует", serverAllSubs);
     }
 
@@ -443,47 +469,71 @@ public class HttpTaskManagerTest extends TasksManagerTest<HttpTaskManager> {
         return new ArrayList<>(epicJson.values());
     }
 
-    private String sendGetToServer (String url) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(httpServerUrl + url))
-                .GET()
-                .build();
+    private String sendGetToServer (String url) {
+        String body = "";
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(httpServerUrl + url))
+                    .GET()
+                    .build();
 
-        HttpClient serverClient = HttpClient.newHttpClient();
-        HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
-        return serverClient.send(request, handler).body();
+            HttpClient serverClient = HttpClient.newHttpClient();
+            HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
+            body = serverClient.send(request, handler).body();
+        } catch (IOException | InterruptedException e) {
+            System.out.println("Ошибка GET запроса");
+        }
+        return body;
     }
 
-    private String sendPostToServer (String url, String task) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(httpServerUrl + url))
-                .POST(HttpRequest.BodyPublishers.ofString(task))
-                .build();
+    private String sendPostToServer (String url, String task) {
+        String body = "";
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(httpServerUrl + url))
+                    .POST(HttpRequest.BodyPublishers.ofString(task))
+                    .build();
 
-        HttpClient serverClient = HttpClient.newHttpClient();
-        HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
-        return serverClient.send(request, handler).body();
+            HttpClient serverClient = HttpClient.newHttpClient();
+            HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
+            body = serverClient.send(request, handler).body();
+        } catch (IOException | InterruptedException e) {
+            System.out.println("Ошибка POST запроса");
+        }
+        return body;
     }
 
-    private String sendDeleteToServer (String url) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(httpServerUrl + url))
-                .DELETE()
-                .build();
+    private String sendDeleteToServer (String url) {
+        String body = "";
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(httpServerUrl + url))
+                    .DELETE()
+                    .build();
 
-        HttpClient serverClient = HttpClient.newHttpClient();
-        HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
-        return serverClient.send(request, handler).body();
+            HttpClient serverClient = HttpClient.newHttpClient();
+            HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
+            body = serverClient.send(request, handler).body();
+        } catch (IOException | InterruptedException e) {
+            System.out.println("Ошибка DELETE запроса");
+        }
+        return body;
     }
 
-    private String sendUnknownToServer(String url) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(httpServerUrl + url))
-                .PUT(HttpRequest.BodyPublishers.ofString("unknown"))
-                .build();
+    private String sendUnknownToServer() {
+        String body = "";
+        try {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(httpServerUrl + "/tasks/task"))
+                    .PUT(HttpRequest.BodyPublishers.ofString("unknown"))
+                    .build();
 
-        HttpClient serverClient = HttpClient.newHttpClient();
-        HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
-        return serverClient.send(request, handler).body();
+            HttpClient serverClient = HttpClient.newHttpClient();
+            HttpResponse.BodyHandler<String> handler = HttpResponse.BodyHandlers.ofString();
+            body = serverClient.send(request, handler).body();
+        } catch (IOException | InterruptedException e) {
+            System.out.println("Ошибка отправки запроса");
+        }
+        return body;
     }
 }
